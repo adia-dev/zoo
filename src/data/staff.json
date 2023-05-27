@@ -1,0 +1,202 @@
+[
+    {
+        "firstName": "John",
+        "lastName": "Doe",
+        "birthDate": "1990-01-01",
+        "job": {
+            "title": "Caretaker",
+            "schedule": [
+                {
+                    "day": "Monday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Tuesday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Wednesday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Thursday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Friday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                }
+            ]
+        },
+        "yearsOfExperience": 5,
+        "email": "john.doe@example.com",
+        "isAdmin": false
+    },
+    {
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "birthDate": "1992-05-10",
+        "job": {
+            "title": "Keeper",
+            "schedule": [
+                {
+                    "day": "Monday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Tuesday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Wednesday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Thursday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Friday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                }
+            ]
+        },
+        "yearsOfExperience": 3,
+        "email": "jane.smith@example.com",
+        "isAdmin": false
+    },
+    {
+        "firstName": "David",
+        "lastName": "Brown",
+        "birthDate": "1985-09-15",
+        "job": {
+            "title": "Veterinarian",
+            "schedule": [
+                {
+                    "day": "Monday",
+                    "startTime": "8:00 AM",
+                    "endTime": "4:00 PM"
+                },
+                {
+                    "day": "Tuesday",
+                    "startTime": "8:00 AM",
+                    "endTime": "4:00 PM"
+                },
+                {
+                    "day": "Wednesday",
+                    "startTime": "8:00 AM",
+                    "endTime": "4:00 PM"
+                },
+                {
+                    "day": "Thursday",
+                    "startTime": "8:00 AM",
+                    "endTime": "4:00 PM"
+                },
+                {
+                    "day": "Friday",
+                    "startTime": "8:00 AM",
+                    "endTime": "4:00 PM"
+                }
+            ]
+        },
+        "yearsOfExperience": 10,
+        "email": "david.brown@example.com",
+        "isAdmin": false
+    },
+    {
+        "firstName": "Emily",
+        "lastName": "Johnson",
+        "birthDate": "1993-12-20",
+        "job": {
+            "title": "Registrar",
+            "schedule": [
+                {
+                    "day": "Monday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Tuesday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Wednesday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Thursday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                },
+                {
+                    "day": "Friday",
+                    "startTime": "9:00 AM",
+                    "endTime": "5:00 PM"
+                }
+            ]
+        },
+        "yearsOfExperience": 7,
+        "email": "emily.johnson@example.com",
+        "isAdmin": false
+    },
+    {
+        "firstName": "Michael",
+        "lastName": "Davis",
+        "birthDate": "1978-07-05",
+        "job": {
+            "title": "Director",
+            "schedule": [
+                {
+                    "day": "Monday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                },
+                {
+                    "day": "Tuesday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                },
+                {
+                    "day": "Wednesday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                },
+                {
+                    "day": "Thursday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                },
+                {
+                    "day": "Friday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                },
+                {
+                    "day": "Saturday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                },
+                {
+                    "day": "Sunday",
+                    "startTime": "11:00 AM",
+                    "endTime": "12:00 AM"
+                }
+            ]
+        },
+        "yearsOfExperience": 15,
+        "email": "michael.davis@example.com",
+        "isAdmin": true
+    }
+]

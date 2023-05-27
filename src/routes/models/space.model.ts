@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import { ISpaceLog, SpaceLogType } from './spaceLog.model';
+import { IStaff } from './staff.model';
 
 export enum SpaceType {
     Indoor = 'Indoor',
@@ -33,6 +34,7 @@ export interface ISpace extends Document {
     expectedMaintenanceEnd?: Date | null;
     maintenanceReason?: ISpaceLog | Types.ObjectId | null;
     spaceLogs: mongoose.Types.ObjectId[];
+    staff: IStaff[]; // Added staff property
 }
 
 const SpaceSchema: Schema = new Schema(
@@ -55,6 +57,7 @@ const SpaceSchema: Schema = new Schema(
         expectedMaintenanceEnd: { type: Date },
         maintenanceReason: { type: Schema.Types.ObjectId, ref: 'SpaceLog' },
         spaceLogs: [{ type: Schema.Types.ObjectId, ref: 'SpaceLog' }],
+        staff: [{ type: Schema.Types.ObjectId, ref: 'Staff' }],
     },
     {
         timestamps: true,

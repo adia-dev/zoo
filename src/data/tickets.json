@@ -1,0 +1,47 @@
+[
+    {
+        "ticketType": "DayPass",
+        "allowedSpaces": [],
+        "escapeGameSpaces": [],
+        "escapeGameStep": 0,
+        "visitedSpaces": [],
+        "validFrom": "2023-05-28T00:00:00Z",
+        "validUntil": "2023-05-28T23:59:59Z",
+        "userId": "user1",
+        "lastUsedSpaceId": null,
+        "disabled": false,
+        "kids": false,
+        "pregnant": false,
+        "wheelchair": false
+    },
+    {
+        "ticketType": "WeekendPass",
+        "allowedSpaces": [],
+        "escapeGameSpaces": [],
+        "escapeGameStep": 0,
+        "visitedSpaces": [],
+        "validFrom": "2023-05-28T00:00:00Z",
+        "validUntil": "2023-05-29T23:59:59Z",
+        "userId": "user2",
+        "lastUsedSpaceId": null,
+        "disabled": false,
+        "kids": false,
+        "pregnant": false,
+        "wheelchair": false
+    },
+    {
+        "ticketType": "AnnualPass",
+        "allowedSpaces": [],
+        "escapeGameSpaces": [],
+        "escapeGameStep": 0,
+        "visitedSpaces": [],
+        "validFrom": "2023-05-28T00:00:00Z",
+        "validUntil": "2024-05-27T23:59:59Z",
+        "userId": "user3",
+        "lastUsedSpaceId": null,
+        "disabled": false,
+        "kids": false,
+        "pregnant": false,
+        "wheelchair": false
+    }
+]
