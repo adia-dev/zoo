@@ -1,0 +1,30 @@
+{
+  "name": "planade-zoo",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon --watch './**/*.ts' --exec 'ts-node' src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "Abdoulaye DIA <abdoudu78130@gmail.com> | pascal <92926579+paschyz@users.noreply.github.com>",
+  "license": "ISC",
+  "description": "A simple API for a pokemon zoo with NodeJS, ExpressJS and MongoDB",
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/express-list-endpoints": "^6.0.0",
+    "@types/morgan": "^1.9.4",
+    "@types/node": "^20.2.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "16.0.3",
+    "express": "^4.18.2",
+    "express-list-endpoints": "6.0.0",
+    "mongoose": "7.0.3",
+    "morgan": "^1.10.0"
+  }
+}
