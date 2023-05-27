@@ -17,6 +17,7 @@ export class UserController {
         router.get('/:id', this.getUserById.bind(this));
         router.put('/:id', this.updateUser.bind(this));
         router.delete('/:id', this.deleteUser.bind(this));
+        router.put('/:id/role', this.updateUserRole.bind(this));
 
         return router;
     }
@@ -39,6 +40,7 @@ export class UserController {
         } catch (error) {
             if (error instanceof Error) {
                 res.status(500).json({ error: error.message });
+                return;
             }
 
             res.status(500).json({ error: 'An error occurred while creating user' });
@@ -91,6 +93,26 @@ export class UserController {
             res.status(200).json(updatedUser);
         } catch (error) {
             res.status(500).json({ error: 'Failed to upsert user' });
+        }
+    }
+
+    public async updateUserRole(req: Request, res: Response): Promise<void> {
+        try {
+            const userId: string = req.params.id;
+            const { role } = req.body;
+            const updatedUser = await this.userService.updateUserRole(userId, role);
+            if (updatedUser) {
+                res.status(200).json({ id: updatedUser._id, role: updatedUser.role });
+            } else {
+                res.status(404).json({ error: 'User not found' });
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(500).json({ error: error.message });
+                return;
+            }
+
+            res.status(500).json({ error: 'Failed to update user role' });
         }
     }
 }

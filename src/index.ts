@@ -48,13 +48,9 @@ async function main() {
 
     app.listen(port, () => {
         console.log(`Server listening on port ${port}`);
-        const endpoints = listEndpoints(app).map((endpoint) => {
-            return `${endpoint.methods.join(", ")} => ${endpoint.path}`;
-        }
-        );
+        let endpoints = listEndpoints(app);
 
-        console.log("Endpoints:");
-        console.log(endpoints);
+        console.table(endpoints);
     });
 }
 
