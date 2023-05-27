@@ -13,12 +13,7 @@ export class SpaceService {
     }
 
     public async getSpaceById(spaceId: string): Promise<ISpace | null> {
-        try {
-            const space = await Space.findById(spaceId);
-            return space;
-        } catch (error) {
-            throw new Error('Failed to fetch space');
-        }
+        return Space.findById(spaceId);
     }
 
     public async updateSpace(spaceId: string, updatedSpace: ISpace): Promise<ISpace | null> {
@@ -40,7 +35,7 @@ export class SpaceService {
 
     public async getAllSpaces(): Promise<ISpace[]> {
         try {
-            const spaces = await Space.find();
+            const spaces = await Space.find().populate('spaceLogs');
             return spaces;
         } catch (error) {
             throw new Error('Failed to fetch spaces');
@@ -69,6 +64,109 @@ export class SpaceService {
             return spaceLogs;
         } catch (error) {
             throw new Error('Failed to fetch space logs');
+        }
+    }
+
+    public async isUnderMaintenance(spaceId: string): Promise<boolean> {
+        try {
+            const space = await Space.findById(spaceId);
+            if (!space) {
+                throw new Error('Space not found');
+            }
+            return space.isUnderMaintenance;
+        } catch (error) {
+            throw new Error('Failed to fetch space');
+        }
+    }
+
+    public async setUnderMaintenance(spaceId: string, expectedMaintenanceEnd?: Date, log?: ISpaceLog | string): Promise<ISpace | null> {
+        try {
+            const space = await Space.findById(spaceId);
+            if (!space) {
+                throw new Error('Space not found');
+            }
+
+            if (space.isUnderMaintenance) {
+                throw new Error('Space is already under maintenance');
+            }
+
+            // check if log is an object create it or else it is a reference to an existing log
+            let maintenanceLog = null;
+            if (log) {
+                if (typeof log === 'object') {
+                    if (log.id !== undefined) {
+                        // log is an existing log
+                        const existingLog = await SpaceLog.findById(log.id);
+                        if (!existingLog) {
+                            throw new Error('Log not found');
+                        }
+
+                        maintenanceLog = existingLog;
+                    } else {
+                        maintenanceLog = await this.createSpaceLog(space, log.logMessage, log.type || SpaceLogType.Maintenance);
+                    }
+                } else if (typeof log === 'string') {
+                    maintenanceLog = await SpaceLog.findById(log);
+                }
+            }
+
+            space.isUnderMaintenance = true;
+            space.maintenanceReason = maintenanceLog;
+            space.expectedMaintenanceEnd = expectedMaintenanceEnd || null;
+            await space.save();
+            return space;
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to set space under maintenance');
+        }
+    }
+
+    public async endMaintenance(spaceId: string, log?: ISpaceLog | string): Promise<ISpace | null> {
+        try {
+            const space = await Space.findById(spaceId);
+            if (!space) {
+                throw new Error('Space not found');
+            }
+
+            if (!space.isUnderMaintenance) {
+                throw new Error('Space is not under maintenance');
+            }
+
+            // check if log is an object create it or else it is a reference to an existing log
+            let maintenanceLog = null;
+            if (log) {
+                if (typeof log === 'object') {
+                    if (log.id !== undefined) {
+                        // log is an existing log
+                        const existingLog = await SpaceLog.findById(log.id);
+                        if (!existingLog) {
+                            throw new Error('Log not found');
+                        }
+
+                        maintenanceLog = existingLog;
+                    } else {
+                        maintenanceLog = await this.createSpaceLog(space, log.logMessage, log.type || SpaceLogType.Maintenance);
+                    }
+                } else if (typeof log === 'string') {
+                    maintenanceLog = await SpaceLog.findById(log);
+                }
+            }
+
+            space.isUnderMaintenance = false;
+            space.maintenanceReason = maintenanceLog;
+            space.expectedMaintenanceEnd = null;
+            await space.save();
+
+            return space;
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to end maintenance');
         }
     }
 }

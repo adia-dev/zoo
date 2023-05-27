@@ -1,7 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { ISpace } from '../models';
 import { SpaceService } from '../services';
-import { Types } from 'mongoose';
 
 export class SpaceController {
     private spaceService: SpaceService;
@@ -18,6 +17,9 @@ export class SpaceController {
         router.post('/', this.createSpace.bind(this));
         router.put('/:id', this.updateSpace.bind(this));
         router.delete('/:id', this.deleteSpace.bind(this));
+        router.patch('/:id/set-under-maintenance', this.setUnderMaintenance.bind(this));
+        router.patch('/:id/end-maintenance', this.endMaintenance.bind(this));
+
         router.post('/:id/logs', this.createSpaceLog.bind(this));
         router.get('/:id/logs', this.getSpaceLogs.bind(this));
 
@@ -85,9 +87,24 @@ export class SpaceController {
     public async createSpaceLog(req: Request, res: Response): Promise<void> {
         try {
             // Je deteste typescript desfois, C++, Rust, Zig quoicoubeh apagnan
-            const spaceId: Types.ObjectId = (req.params.id as unknown as Types.ObjectId) // <--  ????????? j'ai perdu 1 heure a cause de ca
+            // const spaceId: Types.ObjectId = (req.params.id as unknown as Types.ObjectId) // <--  ????????? j'ai perdu 1 heure a cause de ca
+
+            const spaceId = req.params.id;
+
+            if (!spaceId) {
+                res.status(400).json({ error: 'Space id is required' });
+                return;
+            }
+
+            const space = await this.spaceService.getSpaceById(spaceId);
+
+            if (space === null) {
+                res.status(404).json({ error: 'Space not found' });
+                return;
+            }
+
             const logMessage: string = req.body.logMessage;
-            const newSpaceLog = await this.spaceService.createSpaceLog(spaceId, logMessage);
+            const newSpaceLog = await this.spaceService.createSpaceLog(space, logMessage);
             res.status(201).json(newSpaceLog);
         } catch (error) {
             res.status(500).json({ error: 'Failed to create space log' });
@@ -101,6 +118,66 @@ export class SpaceController {
             res.status(200).json(spaceLogs);
         } catch (error) {
             res.status(500).json({ error: 'Failed to fetch space logs' });
+        }
+    }
+
+    public async setUnderMaintenance(req: Request, res: Response): Promise<void> {
+        try {
+            const spaceId: string = req.params.id;
+            const expectedEnd: Date = req.body.expectedEnd;
+            const reason: string = req.body.reason;
+            const updatedSpace = await this.spaceService.setUnderMaintenance(spaceId, expectedEnd, reason);
+            if (updatedSpace) {
+                res.status(200).json(
+                    {
+                        message: 'Space is now under maintenance',
+                        space: {
+                            _id: updatedSpace._id,
+                            name: updatedSpace.name,
+                            isUnderMaintenance: updatedSpace.isUnderMaintenance,
+                            excpectedEnd: updatedSpace.expectedMaintenanceEnd,
+                            reason: updatedSpace.maintenanceReason
+                        }
+                    }
+                );
+            } else {
+                res.status(404).json({ error: 'Space not found' });
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(500).json({ error: error.message });
+                return;
+            }
+            res.status(500).json({ error: 'Failed to update space' });
+        }
+    }
+
+    public async endMaintenance(req: Request, res: Response): Promise<void> {
+        try {
+            const spaceId: string = req.params.id;
+            const updatedSpace = await this.spaceService.endMaintenance(spaceId);
+            if (updatedSpace) {
+                res.status(200).json(
+                    {
+                        message: 'Space is no longer under maintenance',
+                        space: {
+                            _id: updatedSpace._id,
+                            name: updatedSpace.name,
+                            isUnderMaintenance: updatedSpace.isUnderMaintenance,
+                            excpectedEnd: updatedSpace.expectedMaintenanceEnd,
+                            reason: req.body.reason
+                        }
+                    }
+                );
+            } else {
+                res.status(404).json({ error: 'Space not found' });
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(500).json({ error: error.message });
+                return;
+            }
+            res.status(500).json({ error: 'Failed to update space' });
         }
     }
 }
