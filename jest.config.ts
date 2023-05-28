@@ -12,5 +12,4 @@ module.exports = {
     "setupFilesAfterEnv": [
         "./.jest/env.ts"
     ],
-    maxConcurrency: 1,
 }

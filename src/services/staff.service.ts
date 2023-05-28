@@ -63,8 +63,16 @@ export class StaffService {
 
     public async deleteStaff(staffId: string): Promise<void> {
         try {
-            await Staff.findByIdAndRemove(staffId);
+            const deletedStaff = await Staff.findByIdAndRemove(staffId);
+
+            if (!deletedStaff) {
+                throw new Error('Staff not found');
+            }
         } catch (error) {
+            if (error instanceof Error) {
+                throw error
+            }
+
             throw new Error('Failed to delete staff');
         }
     }
@@ -140,10 +148,16 @@ export class StaffService {
             filters['job.schedule.day'] = params.day;
         }
         if (params.startTime) {
-            filters['job.schedule.startTime'] = params.startTime;
+            // convert 24 hour time to 12 hour time
+            const [hour, minute] = params.startTime.split(':');
+            const startTime = `${parseInt(hour) % 12}:${minute} ${parseInt(hour) < 12 ? 'AM' : 'PM'}`;
+            filters['job.schedule.startTime'] = startTime;
         }
         if (params.endTime) {
-            filters['job.schedule.endTime'] = params.endTime;
+            // convert 24 hour time to 12 hour time
+            const [hour, minute] = params.endTime.split(':');
+            const endTime = `${parseInt(hour) % 12}:${minute} ${parseInt(hour) < 12 ? 'AM' : 'PM'}`;
+            filters['job.schedule.endTime'] = endTime;
         }
         if (params.title) {
             filters['job.title'] = params.title;

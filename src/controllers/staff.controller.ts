@@ -68,6 +68,10 @@ export class StaffController {
                 res.status(404).json({ error: 'Staff not found' });
             }
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(400).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to update staff' });
         }
     };
@@ -78,6 +82,10 @@ export class StaffController {
             await this.staffService.deleteStaff(staffId);
             res.sendStatus(204);
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to delete staff' });
         }
     };

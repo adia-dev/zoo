@@ -42,11 +42,11 @@ const NINE_TO_FIVE: JobSchedule[] = [
 ];
 
 const EIGHT_TO_FOUR: JobSchedule[] = [
-    { day: 'Monday', startTime: '8:00 AM', endTime: '4:00 PM' },
     { day: 'Tuesday', startTime: '8:00 AM', endTime: '4:00 PM' },
     { day: 'Wednesday', startTime: '8:00 AM', endTime: '4:00 PM' },
     { day: 'Thursday', startTime: '8:00 AM', endTime: '4:00 PM' },
     { day: 'Friday', startTime: '8:00 AM', endTime: '4:00 PM' },
+    { day: 'Saturday', startTime: '8:00 AM', endTime: '4:00 PM' },
 ];
 
 const I_DONT_DO_NOTHING_BUT_I_GET_PAID_AKA_ADMINS: JobSchedule[] = [
