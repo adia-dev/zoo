@@ -1,12 +1,12 @@
 // @ts-nocheck
 
 const supertest = require('supertest');
-import { startServer } from "../config";
-import { v1Router } from "../routes";
-import { Role, User, IUser, IRole, RoleTitle } from "../models";
+import { startServer } from "../../config";
+import { v1Router } from "../../routes";
+import { Role, User, IUser, IRole, RoleTitle } from "../../models";
 
 const { app, server } = startServer(v1Router);
-import { connectDB, disconnectDB } from "../config";
+import { connectDB, disconnectDB } from "../../config";
 
 const request = supertest(app);
 

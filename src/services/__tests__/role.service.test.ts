@@ -1,10 +1,10 @@
 const supertest = require('supertest');
-import { startServer } from "../config";
-import { v1Router } from "../routes";
+import { startServer } from "../../config";
+import { v1Router } from "../../routes";
 
 const { app, server } = startServer(v1Router);
-import { connectDB, disconnectDB } from "../config";
-import { Role, RoleTitle } from "../models";
+import { connectDB, disconnectDB } from "../../config";
+import { Role, RoleTitle } from "../../models";
 
 const request = supertest(app);
 
