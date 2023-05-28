@@ -1,7 +1,7 @@
 [
     {
         "ticketType": "DayPass",
-        "allowedSpaces": [],
+        "spaces": [],
         "escapeGameSpaces": [],
         "escapeGameStep": 0,
         "visitedSpaces": [],
@@ -16,7 +16,7 @@
     },
     {
         "ticketType": "WeekendPass",
-        "allowedSpaces": [],
+        "spaces": [],
         "escapeGameSpaces": [],
         "escapeGameStep": 0,
         "visitedSpaces": [],
@@ -31,7 +31,7 @@
     },
     {
         "ticketType": "AnnualPass",
-        "allowedSpaces": [],
+        "spaces": [],
         "escapeGameSpaces": [],
         "escapeGameStep": 0,
         "visitedSpaces": [],

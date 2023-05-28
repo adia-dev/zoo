@@ -11,7 +11,7 @@ enum TicketType {
 
 export interface ITicket extends Document {
     ticketType: TicketType;
-    allowedSpaces: Types.ObjectId[] | ISpace[]
+    spaces: Types.ObjectId[] | ISpace[]
     escapeGameSpaces: Types.ObjectId[] | ISpace[]
     escapeGameStep: number;
     visitedSpaces: Types.ObjectId[] | ISpace[]
@@ -29,7 +29,7 @@ export interface ITicket extends Document {
 const TicketSchema: Schema = new Schema(
     {
         ticketType: { type: String, enum: Object.values(TicketType), required: true },
-        allowedSpaces: [{ type: Schema.Types.ObjectId, ref: 'Space', required: true, default: [] }],
+        spaces: [{ type: Schema.Types.ObjectId, ref: 'Space', required: true, default: [] }],
         escapeGameSpaces: [{ type: Schema.Types.ObjectId, ref: 'Space', default: [] }],
         visitedSpaces: [{ type: Schema.Types.ObjectId, ref: 'Space', default: [] }],
         escapeGameStep: { type: Number, default: 0 },

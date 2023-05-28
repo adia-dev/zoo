@@ -89,7 +89,7 @@ export class TicketService {
             }
 
             const ticket = await Ticket.findById(ticketId)
-                .populate('allowedSpaces')
+                .populate('spaces')
                 .populate('visitedSpaces')
                 .populate('lastUsedSpaceId')
                 .populate('escapeGameSpaces');
@@ -108,11 +108,11 @@ export class TicketService {
                 throw new Error('Ticket expired');
             }
 
-            if (ticket.allowedSpaces.length == 0) {
+            if (ticket.spaces.length == 0) {
                 throw new Error('No allowed spaces for this ticket, please contact the administrator');
             }
 
-            if (ticket.allowedSpaces.length == ticket.visitedSpaces.length) {
+            if (ticket.spaces.length == ticket.visitedSpaces.length) {
                 throw new Error('You have already visited all the spaces');
             }
 
@@ -122,8 +122,8 @@ export class TicketService {
 
 
             // Check if the space is allowed for the ticket
-            const allowedSpaceIds = ticket.allowedSpaces.map((space) => space._id.toString());
-            if (!allowedSpaceIds.includes(spaceId)) {
+            const spaceIds = ticket.spaces.map((space) => space._id.toString());
+            if (!spaceIds.includes(spaceId)) {
                 throw new Error('Space not allowed for the ticket');
             }
 
