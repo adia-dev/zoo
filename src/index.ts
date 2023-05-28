@@ -5,7 +5,7 @@ import * as mongoose from "mongoose";
 import * as express from "express";
 import * as morgan from "morgan";
 import * as listEndpoints from "express-list-endpoints";
-import { v1Router } from "./routes/routes";
+import { v1Router } from "./routes";
 
 // routers
 // import v2 from "./routes/v2";
