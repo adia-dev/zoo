@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import { ISpace } from './space.model';
 
-enum TicketType {
+export enum TicketType {
     DayPass = 'DayPass',
     WeekendPass = 'WeekendPass',
     AnnualPass = 'AnnualPass',
@@ -9,16 +9,22 @@ enum TicketType {
     EscapeGame = 'EscapeGame',
 }
 
+export interface ITicketRecord {
+    ticket: Types.ObjectId | ITicket;
+    space: Types.ObjectId | ISpace;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface ITicket extends Document {
     ticketType: TicketType;
     spaces: Types.ObjectId[] | ISpace[]
-    escapeGameSpaces: Types.ObjectId[] | ISpace[]
     escapeGameStep: number;
-    visitedSpaces: Types.ObjectId[] | ISpace[]
+    visitedSpaces: ITicketRecord[];
     validFrom: Date;
     validUntil: Date;
     userId: string;
-    lastUsedSpaceId: Types.ObjectId | string | null;
+    lastVisitedSpace: Types.ObjectId | string | null;
     disabled?: boolean;
     kids?: boolean;
     pregnant?: boolean;
@@ -26,17 +32,27 @@ export interface ITicket extends Document {
     celebrity?: boolean;
 }
 
+const TicketRecordSchema: Schema = new Schema(
+    {
+        space: { type: Schema.Types.ObjectId, ref: 'Space', required: true },
+    },
+    {
+        _id: true,
+        timestamps: true,
+    }
+);
+
 const TicketSchema: Schema = new Schema(
     {
         ticketType: { type: String, enum: Object.values(TicketType), required: true },
         spaces: [{ type: Schema.Types.ObjectId, ref: 'Space', required: true, default: [] }],
-        escapeGameSpaces: [{ type: Schema.Types.ObjectId, ref: 'Space', default: [] }],
-        visitedSpaces: [{ type: Schema.Types.ObjectId, ref: 'Space', default: [] }],
+        visitedSpaces: [{ type: TicketRecordSchema, default: [] }],
         escapeGameStep: { type: Number, default: 0 },
         validFrom: { type: Date, required: true },
         validUntil: { type: Date, required: true },
         userId: { type: String, required: true },
-        lastUsedSpaceId: { type: Schema.Types.ObjectId, ref: 'Space', default: null },
+        records: [{ type: TicketRecordSchema, default: [] }],
+        lastVisitedSpace: { type: Schema.Types.ObjectId, ref: 'Space', default: null },
         disabled: { type: Boolean, default: false },
         kids: { type: Boolean, default: false },
         pregnant: { type: Boolean, default: false },

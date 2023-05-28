@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { ITicket } from '../models/ticket.model';
 import { TicketService } from '../services/ticket.service';
+import { Types } from 'mongoose';
 
 export class TicketController {
     private ticketService: TicketService;
@@ -100,7 +101,7 @@ export class TicketController {
                 return;
             }
 
-            if (typeof spaceId !== 'string') {
+            if (!Types.ObjectId.isValid(spaceId)) {
                 res.status(400).json({ error: 'Space id must be a valid ID related to a space' });
                 return;
             }

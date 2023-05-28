@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Ticket, ITicket, Space, ISpace } from '../models';
+import { Ticket, ITicket, Space, ISpace, TicketType, ITicketRecord } from '../models';
 import { SpaceService } from './space.service';
 
 export class TicketService {
@@ -23,6 +23,25 @@ export class TicketService {
             }
 
             // check all the spaces to see if they are valid or under maintenance
+            for (let i = 0; i < ticket.spaces.length; i++) {
+                const ticketSpace = ticket.spaces[i];
+
+                if (!Types.ObjectId.isValid(ticket.spaces[i].toString())) {
+                    throw new Error(`Invalid space id ${ticket.spaces[i]}`);
+                }
+                const space = await Space.findById(ticket.spaces[i]);
+
+                if (space == null) {
+                    throw new Error(`Space ${ticket.spaces[i]} not found`);
+                }
+
+                if (space.isUnderMaintenance) {
+                    if (space.expectedMaintenanceEnd && space.expectedMaintenanceEnd > (new Date())) {
+                        throw new Error(`Space ${space._id} is under maintenance until ${space.expectedMaintenanceEnd}`);
+                    }
+                    throw new Error(`Space ${space._id} is under maintenance`);
+                }
+            }
 
 
             const newTicket = await Ticket.create(ticket);
@@ -60,7 +79,7 @@ export class TicketService {
         try {
             const ticket = await Ticket.findByIdAndUpdate(
                 ticketId,
-                { $push: { visitedSpaces: spaceId } },
+                { $push: { visitedSpaces: { spaceId } } },
                 { new: true }
             );
             return ticket;
@@ -71,7 +90,7 @@ export class TicketService {
 
     public async updateLastVisitedSpace(ticketId: string, spaceId: string): Promise<ITicket | null> {
         try {
-            const ticket = await Ticket.findByIdAndUpdate(ticketId, { lastUsedSpaceId: spaceId }, { new: true });
+            const ticket = await Ticket.findByIdAndUpdate(ticketId, { lastVisitedSpace: spaceId }, { new: true });
             return ticket;
         } catch (error) {
             throw new Error('Failed to update last visited space for the ticket');
@@ -80,8 +99,6 @@ export class TicketService {
 
     public async useTicket(ticketId: string, spaceId: string): Promise<ITicket | null> {
         try {
-
-            // get the space
             const space = await (new SpaceService()).getSpaceById(spaceId.toString());
 
             if (space == null) {
@@ -91,8 +108,7 @@ export class TicketService {
             const ticket = await Ticket.findById(ticketId)
                 .populate('spaces')
                 .populate('visitedSpaces')
-                .populate('lastUsedSpaceId')
-                .populate('escapeGameSpaces');
+                .populate('lastVisitedSpace');
 
             if (!ticket) {
                 throw new Error('Ticket not found');
@@ -113,45 +129,67 @@ export class TicketService {
             }
 
             if (ticket.spaces.length == ticket.visitedSpaces.length) {
+                if (ticket.ticketType == TicketType.EscapeGame) {
+                    throw new Error('You have already finished the escape game');
+                }
                 throw new Error('You have already visited all the spaces');
             }
 
-            if (ticket.escapeGameSpaces.length > 0 && ticket.escapeGameSpaces.length == ticket.visitedSpaces.length) {
-                throw new Error('You have already finished the escape game');
-            }
+
 
 
             // Check if the space is allowed for the ticket
-            const spaceIds = ticket.spaces.map((space) => space._id.toString());
+            const spaceIds = ticket.spaces.map((space) => {
+                if (space instanceof Types.ObjectId) {
+                    return space.toString();
+                }
+                return space._id.toString();
+            });
+
             if (!spaceIds.includes(spaceId)) {
                 throw new Error('Space not allowed for the ticket');
             }
 
             // Check if the space is not already visited
-            const visitedSpaceIds = ticket.visitedSpaces.map((space) => space._id.toString());
+            const visitedSpaceIds = ticket.visitedSpaces.map(({ space }) => {
+                if (space instanceof Types.ObjectId) {
+                    return space.toString();
+                }
+                return space._id.toString();
+            });
+
             if (visitedSpaceIds.includes(spaceId)) {
                 throw new Error('Space already visited');
             }
 
-            // Check if the space is not an escape game space or not at the top of the list
-            const escapeGameSpaceIds = ticket.escapeGameSpaces.map((space) => space._id.toString());
-            const currentEscapeGameStep = ticket.escapeGameStep;
-            if (currentEscapeGameStep >= 0 && currentEscapeGameStep < escapeGameSpaceIds.length) {
-                const nextEscapeGameSpaceId = escapeGameSpaceIds[currentEscapeGameStep];
-                if (nextEscapeGameSpaceId !== spaceId) {
-                    throw new Error(`You must visit the spaces in the correct order. The next space is ${nextEscapeGameSpaceId}`);
+
+
+            if (ticket.ticketType === TicketType.EscapeGame) {
+
+                // Check if the space is not an escape game space or not at the top of the list
+                const escapeGameSpaceIds = ticket.spaces.map((space) => space._id.toString());
+                const currentEscapeGameStep = ticket.escapeGameStep;
+
+                if (currentEscapeGameStep >= 0 && currentEscapeGameStep < escapeGameSpaceIds.length) {
+                    const nextEscapeGameSpaceId = escapeGameSpaceIds[currentEscapeGameStep];
+                    if (nextEscapeGameSpaceId !== spaceId) {
+                        throw new Error(`You must visit the spaces in the correct order. The next space is ${nextEscapeGameSpaceId}`);
+                    }
+                }
+
+                if (escapeGameSpaceIds.includes(spaceId)) {
+                    ticket.escapeGameStep += 1;
                 }
             }
 
             // Update the ticket with the visited space and last used space
-            ticket.visitedSpaces.push((space) as ISpace & Types.ObjectId);
-            ticket.lastUsedSpaceId = spaceId;
-            if (escapeGameSpaceIds.includes(spaceId)) {
-                ticket.escapeGameStep += 1;
-            }
-            await ticket.save();
+            const ticketRecord: Partial<ITicketRecord> = { space: space._id };
+            ticket.visitedSpaces.push(ticketRecord as ITicketRecord); // <-- I hate this
+            ticket.lastVisitedSpace = spaceId;
 
-            return ticket;
+            const updatedTicket = await ticket.save();
+
+            return updatedTicket;
         } catch (error) {
             if (error instanceof Error) {
                 throw new Error(error.message);

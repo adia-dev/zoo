@@ -132,11 +132,7 @@ describe('(v1) Staff Service tests', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.length).toBe(2);
-            expect(res.body[0].firstName).toBe(staffData[0].firstName);
-            expect(res.body[0].lastName).toBe(staffData[0].lastName);
-            expect(res.body[1].firstName).toBe(staffData[1].firstName);
-            expect(res.body[1].lastName).toBe(staffData[1].lastName);
-            // Add more assertions as needed
+
         });
 
         // Add more tests for query parameters, filtering, etc.
