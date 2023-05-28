@@ -23,7 +23,8 @@ const connectDB = async () => {
             authSource: 'admin',
         });
 
-        console.log(`MongoDB connected: ${conn.connection.host}`);
+        if (process.env.NODE_ENV !== 'test')
+            console.log(`MongoDB connected: ${conn.connection.host}`);
     } catch (err) {
         console.log(err);
         process.exit(1);

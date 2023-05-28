@@ -6,7 +6,6 @@ export class RoleService {
             const newRole = await Role.create(role);
             return newRole;
         } catch (error) {
-            console.log(error);
             if (error instanceof Error) {
                 if (error.name === 'MongoServerError') {
                     // @ts-ignore
@@ -14,6 +13,8 @@ export class RoleService {
                         throw new Error('Role already exists');
                     }
                 }
+
+                throw error;
             }
             throw new Error('Failed to create role');
         }
@@ -39,8 +40,17 @@ export class RoleService {
 
     public async deleteRole(roleId: string): Promise<void> {
         try {
-            await Role.findByIdAndDelete(roleId);
+            const role = await Role.findByIdAndDelete(roleId);
+
+            if (!role) {
+                throw new Error('Role not found');
+            }
+
+            return;
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to delete role');
         }
     }

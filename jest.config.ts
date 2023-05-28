@@ -9,4 +9,8 @@ module.exports = {
     "transform": {
         "^.+\\.(ts|tsx)$": "ts-jest"
     },
+    "setupFilesAfterEnv": [
+        "./.jest/env.ts"
+    ],
+    maxConcurrency: 1,
 }

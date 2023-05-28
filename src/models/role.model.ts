@@ -6,10 +6,17 @@ export interface IRole extends Document {
     description: string;
 }
 
+export enum RoleTitle {
+    Admin = 'Admin',
+    User = 'User',
+    Manager = 'Manager',
+    Guest = 'Guest',
+}
+
 const RoleSchema: Schema = new Schema({
     name: {
         type: String, required: true, unique: true,
-        enum: ['Admin', 'User', 'Manager', 'Guest']
+        enum: Object.values(RoleTitle),
     },
     description: { type: String, required: true },
 }, {

@@ -38,7 +38,7 @@ export class RoleController {
             res.status(201).json(createdRole);
         } catch (error) {
             if (error instanceof Error) {
-                res.status(500).json({ error: error.message });
+                res.status(400).json({ error: error.message });
                 return;
             }
 
@@ -94,6 +94,10 @@ export class RoleController {
             await this.roleService.deleteRole(roleId);
             res.status(204).end();
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to delete role' });
         }
     }
