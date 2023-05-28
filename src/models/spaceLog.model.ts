@@ -11,16 +11,16 @@ export enum SpaceLogType {
 
 export interface ISpaceLog extends Document {
     spaceId: ISpace | mongoose.Types.ObjectId;
-    logMessage: string;
-    logDate: Date;
+    message: string;
+    createdAt: Date;
+    updatedAt: Date;
     type: SpaceLogType;
 }
 
 const SpaceLogSchema: Schema = new Schema(
     {
         spaceId: { type: mongoose.Types.ObjectId, required: true },
-        logMessage: { type: String, required: true },
-        logDate: { type: Date, required: true },
+        message: { type: String, required: true },
         type: { type: String, enum: Object.values(SpaceLogType), required: true },
     },
     {

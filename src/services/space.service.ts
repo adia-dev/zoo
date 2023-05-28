@@ -27,8 +27,16 @@ export class SpaceService {
 
     public async deleteSpace(spaceId: string): Promise<void> {
         try {
-            await Space.findByIdAndDelete(spaceId);
+            const deletedSpace = await Space.findByIdAndDelete(spaceId);
+
+            if (!deletedSpace) {
+                throw new Error('Space not found');
+            }
+
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to delete space');
         }
     }
@@ -42,12 +50,11 @@ export class SpaceService {
         }
     }
 
-    public async createSpaceLog(spaceId: ISpace | Types.ObjectId, logMessage: string, type?: SpaceLogType): Promise<ISpaceLog> {
+    public async createSpaceLog(spaceId: ISpace | Types.ObjectId, message: string, type?: SpaceLogType): Promise<ISpaceLog> {
         try {
             const spaceLog: Partial<ISpaceLog> = {
                 spaceId,
-                logMessage,
-                logDate: new Date(),
+                message,
                 type: type || SpaceLogType.Info,
             };
             const newSpaceLog = await SpaceLog.create(spaceLog);
@@ -62,12 +69,37 @@ export class SpaceService {
 
     public async getSpaceLogs(spaceId: string): Promise<ISpaceLog[]> {
         try {
-            const spaceLogs = await SpaceLog.find({ spaceId });
+
+            const space = await Space.findById(spaceId);
+            if (!space) {
+                throw new Error('Space not found');
+            }
+
+            const spaceLogs = await SpaceLog.find({ spaceId: space._id });
             return spaceLogs;
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to fetch space logs');
         }
     }
+
+    public async deleteSpaceLog(spaceLogId: string): Promise<void> {
+        try {
+            const deletedSpaceLog = await SpaceLog.findByIdAndDelete(spaceLogId);
+
+            if (!deletedSpaceLog) {
+                throw new Error('Space log not found');
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to delete space log');
+        }
+    }
+
 
     public async isUnderMaintenance(spaceId: string): Promise<boolean> {
         try {
@@ -105,7 +137,7 @@ export class SpaceService {
 
                         maintenanceLog = existingLog;
                     } else {
-                        maintenanceLog = await this.createSpaceLog(space, log.logMessage, log.type || SpaceLogType.Maintenance);
+                        maintenanceLog = await this.createSpaceLog(space, log.message, log.type || SpaceLogType.Maintenance);
                     }
                 } else if (typeof log === 'string') {
                     maintenanceLog = await SpaceLog.findById(log);
@@ -150,7 +182,7 @@ export class SpaceService {
 
                         maintenanceLog = existingLog;
                     } else {
-                        maintenanceLog = await this.createSpaceLog(space, log.logMessage, log.type || SpaceLogType.Maintenance);
+                        maintenanceLog = await this.createSpaceLog(space, log.message, log.type || SpaceLogType.Maintenance);
                     }
                 } else if (typeof log === 'string') {
                     maintenanceLog = await SpaceLog.findById(log);
