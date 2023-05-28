@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --watch './**/*.ts' --exec 'ts-node' src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "NODE_ENV=test jest --watchAll --verbose --detectOpenHandles --forceExit"
   },
   "keywords": [],
   "author": "Abdoulaye DIA <abdoudu78130@gmail.com> | pascal <92926579+paschyz@users.noreply.github.com>",
@@ -14,8 +15,13 @@
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/express-list-endpoints": "^6.0.0",
+    "@types/jest": "^29.5.1",
     "@types/morgan": "^1.9.4",
     "@types/node": "^20.2.3",
+    "jest": "^29.5.0",
+    "mongodb-memory-server": "^8.12.2",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   },
