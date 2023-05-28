@@ -149,8 +149,6 @@ describe('(v1) Role Service tests', () => {
 
             const res = await request.post(`/api/v1/roles`).send(roleData);
 
-            console.log(res)
-
             expect(res.status).toBe(400);
             expect(res.body).toEqual({ error: 'Role validation failed: name: `Super Admin` is not a valid enum value for path `name`.' });
         });

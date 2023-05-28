@@ -27,11 +27,11 @@ export interface IUser extends Document {
 }
 
 const AddressSchema: Schema = new Schema({
-    street: { type: String },
-    city: { type: String },
-    state: { type: String },
-    postalCode: { type: String },
-    country: { type: String },
+    street: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    country: { type: String, required: true },
 });
 
 const UserSchema: Schema = new Schema({

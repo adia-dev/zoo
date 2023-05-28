@@ -35,11 +35,19 @@ export class UserController {
     public async createUser(req: Request, res: Response): Promise<void> {
         try {
             const userData: IUser = req.body;
+
+            const missingFields = this.validateUser(userData);
+
+            if (missingFields !== null) {
+                res.status(400).json({ error: "Please provide all required fields", missingFields });
+                return;
+            }
+
             const newUser = await this.userService.createUser(userData);
             res.status(201).json(newUser);
         } catch (error) {
             if (error instanceof Error) {
-                res.status(500).json({ error: error.message });
+                res.status(400).json({ error: error.message });
                 return;
             }
 
@@ -82,6 +90,10 @@ export class UserController {
             await this.userService.deleteUser(userId);
             res.status(204).end();
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to delete user' });
         }
     }
@@ -108,11 +120,60 @@ export class UserController {
             }
         } catch (error) {
             if (error instanceof Error) {
-                res.status(500).json({ error: error.message });
+                res.status(400).json({ error: error.message });
                 return;
             }
 
             res.status(500).json({ error: 'Failed to update user role' });
         }
     }
+
+    private validateUser(userData: { [key: string]: any }): any | null {
+        const missingFields: { [key: string]: { [key: string]: string } | string } = {};
+        const requiredFields: { [key: string]: string } = {
+            firstName: 'string',
+            lastName: 'string',
+            email: 'string',
+            password: 'string',
+            role: 'string'
+        }
+        const addressRequiredFields: { [key: string]: string } = {
+            street: 'string',
+            city: 'string',
+            state: 'string',
+            zip: 'string'
+        }
+
+        for (const field in requiredFields) {
+            if (!userData[field]) {
+                Object.assign(missingFields, { [field]: `${field} is required` });
+            } else if (typeof userData[field] !== requiredFields[field]) {
+                Object.assign(missingFields, { [field]: `${field} must be of type ${requiredFields[field]}` });
+            }
+        }
+
+        if (!missingFields['password'] && userData.password.length < 8) {
+            Object.assign(missingFields, { password: 'password must be at least 8 characters long' });
+        }
+
+        if (userData.address) {
+
+            for (const field in addressRequiredFields) {
+                if (!userData.address[field]) {
+                    if (!missingFields['address']) {
+                        missingFields['address'] = {};
+                    }
+                    Object.assign(missingFields['address'], { [field]: `${field} is required` });
+                } else if (typeof userData.address[field] !== addressRequiredFields[field]) {
+                    if (!missingFields['address']) {
+                        missingFields['address'] = {};
+                    }
+                    Object.assign(missingFields['address'], { [field]: `${field} must be of type ${addressRequiredFields[field]}` });
+                }
+            }
+        }
+
+        return Object.keys(missingFields).length > 0 ? missingFields : null;
+    }
+
 }

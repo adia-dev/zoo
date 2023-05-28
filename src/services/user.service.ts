@@ -25,11 +25,8 @@ export class UserService {
             const newUser = await User.create(user);
             return newUser;
         } catch (error) {
-            console.log(error);
             if (error instanceof Error) {
                 if (error.name === 'MongoServerError') {
-                    // @ts-ignore
-                    console.log(error.code);
                     // @ts-ignore
                     if (error.code === 11000) {
                         throw new Error('User already exists');
@@ -56,8 +53,16 @@ export class UserService {
 
     public async deleteUser(userId: string): Promise<void> {
         try {
-            await User.findByIdAndDelete(userId);
+            const deletedUser = await User.findByIdAndDelete(userId);
+
+            if (!deletedUser) {
+                throw new Error('User not found');
+            }
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
             throw new Error('Failed to delete user');
         }
     }
@@ -83,8 +88,6 @@ export class UserService {
                 roleObj = await Role.findById(role._id);
             }
 
-            console.log(roleObj);
-
             if (!roleObj) {
                 throw new Error('Role not found');
             }
@@ -92,6 +95,9 @@ export class UserService {
             const updatedUser = await User.findByIdAndUpdate(userId, { role: roleObj }, { new: true }).populate('role');
             return updatedUser;
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to update user role');
         }
     }

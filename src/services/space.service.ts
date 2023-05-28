@@ -53,7 +53,9 @@ export class SpaceService {
             const newSpaceLog = await SpaceLog.create(spaceLog);
             return newSpaceLog;
         } catch (error) {
-            console.log(error);
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to create space log');
         }
     }
