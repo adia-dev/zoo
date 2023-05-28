@@ -1,4 +1,5 @@
-import { Animal, IAnimal, AnimalSpecies, AnimalGender, AnimalTreatment } from '../models';
+import { Types } from 'mongoose';
+import { Animal, IAnimal, AnimalSpecies, AnimalGender, AnimalTreatment, IAnimalLog, AnimalLog } from '../models';
 
 export class AnimalService {
     public async createAnimal(animalData: IAnimal): Promise<IAnimal> {
@@ -22,7 +23,13 @@ export class AnimalService {
 
     public async getAllAnimals(): Promise<IAnimal[]> {
         try {
-            const animals = await Animal.find();
+            const animals = await Animal.find().populate({
+                path: 'logs',
+                populate: {
+                    path: 'staff',
+                    model: 'Staff',
+                },
+            });
             return animals;
         } catch (error) {
             throw new Error('Failed to fetch animals');
@@ -87,6 +94,44 @@ export class AnimalService {
             return animal.treatments;
         } catch (error) {
             throw new Error('Failed to fetch treatments');
+        }
+    }
+
+    public async createAnimalLog(animalId: string, logData: IAnimalLog): Promise<IAnimalLog | null> {
+        try {
+            const animal = await Animal.findById(animalId);
+            if (!animal) {
+                throw new Error('Animal not found');
+            }
+
+            const log: Partial<IAnimalLog> = {
+                ...logData,
+                animal,
+            };
+            const newAnimalLog = await AnimalLog.create(log);
+
+            animal.logs.push(newAnimalLog._id);
+            await animal.save();
+
+            return newAnimalLog;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to create animal log');
+        }
+    }
+
+    public async getAnimalLogs(animalId: string): Promise<IAnimalLog[] | Types.ObjectId[] | null> {
+        try {
+            const animal = await Animal.findById(animalId).populate('logs');
+            if (!animal) {
+                throw new Error('Animal not found');
+            }
+
+            return animal.logs;
+        } catch (error) {
+            throw new Error('Failed to fetch animal logs');
         }
     }
 }

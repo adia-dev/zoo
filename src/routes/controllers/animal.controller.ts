@@ -21,6 +21,8 @@ export class AnimalController {
         router.get('/space/:spaceId', this.getAnimalsBySpace);
         router.post('/:id/treatments', this.performTreatment);
         router.get('/:id/treatments', this.getTreatmentsByAnimal);
+        router.post('/:id/logs', this.createAnimalLog);
+        router.get('/:id/logs', this.getAnimalLogs);
 
         return router;
     }
@@ -141,4 +143,34 @@ export class AnimalController {
             res.status(500).json({ error: 'Failed to fetch treatments' });
         }
     }
+
+    public createAnimalLog = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const animalId: string = req.params.id;
+            const log = req.body;
+            const updatedAnimal = await this.animalService.createAnimalLog(animalId, log);
+            if (updatedAnimal) {
+                res.json(updatedAnimal);
+            } else {
+                res.status(404).json({ error: 'Animal not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to create log' });
+        }
+    }
+
+    public getAnimalLogs = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const animalId: string = req.params.id;
+            const logs = await this.animalService.getAnimalLogs(animalId);
+            if (logs) {
+                res.json(logs);
+            } else {
+                res.status(404).json({ error: 'Animal not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch logs' });
+        }
+    }
+
 }

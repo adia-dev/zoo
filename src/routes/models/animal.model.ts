@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
+import { IAnimalLog } from './animalLog.model';
 
 export enum AnimalSpecies {
     Lion = 'Lion',
@@ -10,8 +11,8 @@ export enum AnimalSpecies {
 }
 
 export enum AnimalGender {
-    Male = "Male",
-    Female = 'Female'
+    Male = 'Male',
+    Female = 'Female',
 }
 
 export interface AnimalTreatment {
@@ -29,6 +30,7 @@ export interface IAnimal extends Document {
     treatments: AnimalTreatment[];
     spaceId: Types.ObjectId | string; // Reference to the space where the animal resides
     joinedOn: Date;
+    logs: Types.ObjectId[] | IAnimalLog[]; // References to the AnimalLog model
 }
 
 const AnimalSchema: Schema = new Schema(
@@ -47,6 +49,7 @@ const AnimalSchema: Schema = new Schema(
             },
         ],
         spaceId: { type: Schema.Types.ObjectId, ref: 'Space', required: true }, // Reference to the Space model for the space where the animal resides
+        logs: [{ type: Schema.Types.ObjectId, ref: 'AnimalLog' }], // References to the AnimalLog model
     },
     {
         timestamps: true,
