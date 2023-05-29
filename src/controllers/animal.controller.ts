@@ -30,6 +30,14 @@ export class AnimalController {
     public createAnimal = async (req: Request, res: Response): Promise<void> => {
         try {
             const animalData: IAnimal = req.body;
+
+            const missingFields = this.validateAnimal(animalData);
+
+            if (missingFields !== null) {
+                res.status(400).json({ error: "Please provide all required fields", missingFields });
+                return;
+            }
+
             const newAnimal = await this.animalService.createAnimal(animalData);
             res.status(201).json(newAnimal);
         } catch (error) {
@@ -81,6 +89,10 @@ export class AnimalController {
             await this.animalService.deleteAnimal(animalId);
             res.sendStatus(204);
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to delete animal' });
         }
     };
@@ -90,6 +102,11 @@ export class AnimalController {
             const species: string = req.params.species;
             if (!species) {
                 res.status(400).json({ error: 'Animal species not provided' });
+                return;
+            }
+
+            if (Object.values(AnimalSpecies).indexOf(species as AnimalSpecies) === -1) {
+                res.status(400).json({ error: 'Invalid animal species', expected: Object.values(AnimalSpecies) });
                 return;
             }
 
@@ -105,6 +122,12 @@ export class AnimalController {
             const spaceId: string = req.params.spaceId;
             if (!spaceId) {
                 res.status(400).json({ error: 'Space ID not provided' });
+                return;
+            }
+
+            const space = await this.animalService.getAnimalsBySpace(spaceId);
+            if (!space) {
+                res.status(404).json({ error: 'Space not found' });
                 return;
             }
 
@@ -126,6 +149,10 @@ export class AnimalController {
                 res.status(404).json({ error: 'Animal not found' });
             }
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to perform treatment' });
         }
     };
@@ -140,6 +167,10 @@ export class AnimalController {
                 res.status(404).json({ error: 'Animal not found' });
             }
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to fetch treatments' });
         }
     }
@@ -147,14 +178,18 @@ export class AnimalController {
     public createAnimalLog = async (req: Request, res: Response): Promise<void> => {
         try {
             const animalId: string = req.params.id;
-            const log = req.body;
-            const updatedAnimal = await this.animalService.createAnimalLog(animalId, log);
-            if (updatedAnimal) {
-                res.json(updatedAnimal);
+            const logData = req.body;
+            const newLog = await this.animalService.createAnimalLog(animalId, logData);
+            if (newLog) {
+                res.status(201).json(newLog);
             } else {
                 res.status(404).json({ error: 'Animal not found' });
             }
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to create log' });
         }
     }
@@ -169,8 +204,58 @@ export class AnimalController {
                 res.status(404).json({ error: 'Animal not found' });
             }
         } catch (error) {
+            if (error instanceof Error) {
+                res.status(404).json({ error: error.message });
+                return;
+            }
             res.status(500).json({ error: 'Failed to fetch logs' });
         }
+    }
+
+    private validateAnimal(animalData: { [key: string]: any }): any | null {
+        const missingFields: { [key: string]: { [key: string]: string } | string } = {};
+        const requiredFields: { [key: string]: string } = {
+            name: 'string',
+            species: 'string',
+            age: 'number',
+            gender: 'string',
+            description: 'string',
+            spaceId: 'string',
+            joinedOn: 'string',
+        };
+
+        const treatmentRequiredFields: { [key: string]: string } = {
+            date: 'string',
+            description: 'string',
+            performedBy: 'string',
+        };
+
+        for (const field in requiredFields) {
+            if (!animalData[field]) {
+                Object.assign(missingFields, { [field]: `${field} is required` });
+            } else if (typeof animalData[field] !== requiredFields[field]) {
+                Object.assign(missingFields, { [field]: `${field} must be of type ${requiredFields[field]}` });
+            }
+        }
+
+        if (animalData.treatments.length > 0) {
+
+            for (const field in treatmentRequiredFields) {
+                if (!animalData.treatments[field]) {
+                    if (!missingFields['treatments']) {
+                        missingFields['treatments'] = {};
+                    }
+                    Object.assign(missingFields['treatments'], { [field]: `${field} is required` });
+                } else if (typeof animalData.treatments[field] !== treatmentRequiredFields[field]) {
+                    if (!missingFields['treatments']) {
+                        missingFields['treatments'] = {};
+                    }
+                    Object.assign(missingFields['treatments'], { [field]: `${field} must be of type ${treatmentRequiredFields[field]}` });
+                }
+            }
+        }
+
+        return Object.keys(missingFields).length > 0 ? missingFields : null;
     }
 
 }

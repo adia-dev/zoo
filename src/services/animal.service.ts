@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Animal, IAnimal, AnimalSpecies, AnimalGender, AnimalTreatment, IAnimalLog, AnimalLog } from '../models';
+import { Animal, AnimalLog, AnimalSpecies, AnimalTreatment, IAnimal, IAnimalLog } from '../models';
 
 export class AnimalService {
     public async createAnimal(animalData: IAnimal): Promise<IAnimal> {
@@ -47,8 +47,14 @@ export class AnimalService {
 
     public async deleteAnimal(animalId: string): Promise<void> {
         try {
-            await Animal.findByIdAndRemove(animalId);
+            const deletedAnimal = await Animal.findByIdAndRemove(animalId);
+            if (!deletedAnimal) {
+                throw new Error('Animal not found');
+            }
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to delete animal');
         }
     }
@@ -81,6 +87,9 @@ export class AnimalService {
             const updatedAnimal = await animal.save();
             return updatedAnimal;
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to perform treatment');
         }
     }
@@ -93,6 +102,9 @@ export class AnimalService {
             }
             return animal.treatments;
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to fetch treatments');
         }
     }
@@ -131,6 +143,9 @@ export class AnimalService {
 
             return animal.logs;
         } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
             throw new Error('Failed to fetch animal logs');
         }
     }
