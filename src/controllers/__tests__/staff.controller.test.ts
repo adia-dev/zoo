@@ -3,7 +3,7 @@
 const supertest = require('supertest');
 import { startServer } from "../../config";
 import { v1Router } from "../../routes";
-import { JobTitle, NINE_TO_FIVE, EIGHT_TO_FOUR, Staff, IStaff, JobSchedule } from "../../models/";
+import { JobTitle, NINE_TO_FIVE, EIGHT_TO_FOUR, Staff, IStaff, JobSchedule } from "../../models";
 
 const { app, server } = startServer(v1Router);
 import { connectDB, disconnectDB } from "../../config";
