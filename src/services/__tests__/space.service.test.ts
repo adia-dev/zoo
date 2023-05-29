@@ -316,8 +316,6 @@ describe('(v1) Space Service tests', () => {
 
             const res = await request.get(`/api/v1/spaces/${space._id}/logs`);
 
-            console.log(res.body);
-
             expect(res.status).toBe(200);
             expect(res.body.length).toBe(2);
             expect(res.body[0]).toEqual(expect.objectContaining({ spaceId: space._id.toString(), message: log1.message, type: log1.type }));
