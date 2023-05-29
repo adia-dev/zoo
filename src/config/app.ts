@@ -27,10 +27,9 @@ const startServer: (router: express.Router, callback?: () => void) => { app: exp
     app.use(router);
 
     const server: Listen = app.listen(port, () => {
-        if (process.env.NODE_ENV !== "test")
+        if (process.env.NODE_ENV !== "test") {
             console.log(`Server listening on port ${port}`);
 
-        if (process.env.NODE_ENV === "dev") {
             let endpoints = listEndpoints(app);
             console.table(endpoints);
         }
