@@ -21,9 +21,6 @@ const startServer: (router: express.Router, callback?: () => void) => { app: exp
     app.use(express.json());
     app.use(morgan("dev"));
 
-    app.use(express.json());
-    app.use(morgan("dev"));
-
     app.use(router);
 
     const server: Listen = app.listen(port, () => {
