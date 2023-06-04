@@ -4,9 +4,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --watch './**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev": "nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
     "start": "node dist/index.js",
-    "test": "NODE_ENV=test jest"
+    "test": "SET NODE_ENV=test & jest"
   },
   "keywords": [],
   "author": "Abdoulaye DIA <abdoudu78130@gmail.com> | pascal <92926579+paschyz@users.noreply.github.com>",

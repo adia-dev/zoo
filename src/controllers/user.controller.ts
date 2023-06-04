@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
-import { IUser } from '../models';
+import { IUser, User, SessionModel } from '../models';
 import { UserService } from '../services';
+import {checkUserToken} from "../middlewares";
 
 export class UserController {
     private userService: UserService;
@@ -12,8 +13,11 @@ export class UserController {
     routes(): Router {
         const router = Router();
 
-        router.get('/', this.getUsers.bind(this));
+        router.get('/',checkUserToken(), this.getUsers.bind(this));
+        router.post('/login', this.login.bind(this));
         router.post('/', this.createUser.bind(this));
+        router.get('/me', this.me.bind(this));
+
         router.get('/:id', this.getUserById.bind(this));
         router.put('/:id', this.updateUser.bind(this));
         router.delete('/:id', this.deleteUser.bind(this));
@@ -21,7 +25,37 @@ export class UserController {
 
         return router;
     }
+    async login(req: Request, res: Response) {
+        if(!req.body || typeof req.body.email !== "string" || typeof req.body.password !== "string") {
+            res.status(400).end();
+            return;
+        }
 
+        try {
+            const user = await User.findOne({
+                email: req.body.email,
+                password: req.body.password,
+            });
+            // const platform = req.headers['user-agent'];
+            const session = await SessionModel.create({
+                user: user,
+                expirationDate:Date.now()+3600*1000*24,
+                // platform: platform
+            });
+            res.json({
+                token: session._id
+            });
+        } catch (error) {
+            res.status(401).json({ error: 'Failed to login' });
+        }
+        
+        // on retourne à l'utilisateur uniquement le token de la session.
+        
+    }
+
+    async me(req: Request, res: Response) {
+        res.json(req.user);
+    }
 
     public async getUsers(req: Request, res: Response): Promise<void> {
         try {
