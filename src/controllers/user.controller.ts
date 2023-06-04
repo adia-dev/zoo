@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { IUser, User, SessionModel } from '../models';
 import { UserService } from '../services';
-import {checkUserToken} from "../middlewares";
+import { checkUserToken } from "../middlewares";
 
 export class UserController {
     private userService: UserService;
@@ -13,7 +13,7 @@ export class UserController {
     routes(): Router {
         const router = Router();
 
-        router.get('/',checkUserToken(), this.getUsers.bind(this));
+        router.get('/', this.getUsers.bind(this));
         router.post('/login', this.login.bind(this));
         router.post('/', this.createUser.bind(this));
         router.get('/me', this.me.bind(this));
@@ -26,7 +26,7 @@ export class UserController {
         return router;
     }
     async login(req: Request, res: Response) {
-        if(!req.body || typeof req.body.email !== "string" || typeof req.body.password !== "string") {
+        if (!req.body || typeof req.body.email !== "string" || typeof req.body.password !== "string") {
             res.status(400).end();
             return;
         }
@@ -39,7 +39,7 @@ export class UserController {
             // const platform = req.headers['user-agent'];
             const session = await SessionModel.create({
                 user: user,
-                expirationDate:Date.now()+3600*1000*24,
+                expirationDate: Date.now() + 3600 * 1000 * 24,
                 // platform: platform
             });
             res.json({
@@ -48,9 +48,9 @@ export class UserController {
         } catch (error) {
             res.status(401).json({ error: 'Failed to login' });
         }
-        
+
         // on retourne à l'utilisateur uniquement le token de la session.
-        
+
     }
 
     async me(req: Request, res: Response) {
