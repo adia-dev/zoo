@@ -1,5 +1,6 @@
 import { EIGHT_TO_FOUR, IStaff, I_DONT_DO_NOTHING_BUT_I_GET_PAID_AKA_ADMINS, JobSchedule, JobTitle, NINE_TO_FIVE, Staff } from '../models/staff.model';
 import { ISpace, Space } from '../models/space.model';
+import {Request, Response} from "express";
 
 export interface IStaffRequestParams {
     day?: string;
@@ -29,6 +30,35 @@ export class StaffService {
             throw new Error('Failed to create staff');
         }
     }
+
+    public async checkWeeklyStaffRequirements(): Promise<boolean> {
+        try {
+            const requiredJobTitles: JobTitle[] = [
+                JobTitle.Registrar,
+                JobTitle.Veterinarian,
+                JobTitle.Caretaker,
+                JobTitle.Seller
+            ];
+
+            const staffByJobTitle: { [key in JobTitle]?: any[] } = {};
+
+            for (const jobTitle of requiredJobTitles) {
+                staffByJobTitle[jobTitle] = await this.getStaffByJobTitle(jobTitle);
+            }
+
+            for (const jobTitle of requiredJobTitles) {
+                if (staffByJobTitle[jobTitle]?.length === 0) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            throw new Error('Failed to check weekly staff requirements');
+        }
+    }
+
+
 
     public async getStaffById(staffId: string): Promise<IStaff | null> {
         try {

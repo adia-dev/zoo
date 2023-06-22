@@ -8,6 +8,7 @@ export enum JobTitle {
     Registrar = 'Registrar',
     Director = 'Director',
     Manager = 'Manager',
+    Seller = 'Seller'
 }
 
 interface JobSchedule {
@@ -31,6 +32,7 @@ export interface IStaff extends Document {
     email: string;
     isAdmin: boolean;
     assignedSpace: ISpace | null;
+    isworking: boolean;
 }
 
 const NINE_TO_FIVE: JobSchedule[] = [

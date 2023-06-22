@@ -20,6 +20,9 @@ export class StaffController {
         router.get('/job-title/:title', this.getStaffByJobTitle);
         router.get('/schedule/:schedule', this.getStaffBySchedule);
         router.put('/:id/assign-space/', this.assignStaffToSpace);
+        router.get('/weekly-staff-requirements', this.checkWeeklyStaffRequirements);
+
+
 
         return router;
     }
@@ -76,6 +79,21 @@ export class StaffController {
         }
     };
 
+    public checkWeeklyStaffRequirements = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const isRequirementsMet = await this.staffService.checkWeeklyStaffRequirements();
+
+            if (isRequirementsMet) {
+                res.json({ message: 'he weekly staff requirements are met.' });
+            } else {
+                res.status(400).json({ error: 'Some required positions are not filled.' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to check weekly staff requirements' });
+        }
+    };
+
+
     public deleteStaff = async (req: Request, res: Response): Promise<void> => {
         try {
             const staffId: string = req.params.id;
@@ -123,6 +141,10 @@ export class StaffController {
             res.status(500).json({ error: 'Failed to fetch staff' });
         }
     };
+
+
+
+
 
     public assignStaffToSpace = async (req: Request, res: Response): Promise<void> => {
         try {
