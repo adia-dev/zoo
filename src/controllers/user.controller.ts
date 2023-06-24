@@ -13,7 +13,7 @@ export class UserController {
     routes(): Router {
         const router = Router();
 
-        router.get('/', this.getUsers.bind(this));
+        router.get('/' ,checkUserToken(), this.getUsers.bind(this));
         router.post('/login', this.login.bind(this));
         router.post('/', this.createUser.bind(this));
         router.get('/me', this.me.bind(this));
