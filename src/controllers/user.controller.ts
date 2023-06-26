@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { IUser, User, SessionModel } from '../models';
 import { UserService } from '../services';
 import { checkUserToken } from "../middlewares";
-
+import { SecurityUtils } from '../utils';
 export class UserController {
     private userService: UserService;
 
@@ -32,9 +32,11 @@ export class UserController {
         }
 
         try {
+            const salt = process.env.PASSWORD_SALT;
+            const hashedPassword = await SecurityUtils.toSHA512(req.body.password + salt);
             const user = await User.findOne({
                 email: req.body.email,
-                password: req.body.password,
+                password: hashedPassword,
             });
             // const platform = req.headers['user-agent'];
             const session = await SessionModel.create({
