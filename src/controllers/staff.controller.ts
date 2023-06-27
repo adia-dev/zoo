@@ -22,8 +22,6 @@ export class StaffController {
         router.put('/:id/assign-space/', this.assignStaffToSpace);
         router.get('/weekly-staff-requirements', this.checkWeeklyStaffRequirements);
 
-
-
         return router;
     }
 
