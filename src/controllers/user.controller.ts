@@ -13,7 +13,7 @@ export class UserController {
     routes(): Router {
         const router = Router();
 
-        router.get('/', checkUserToken(), this.getUsers.bind(this));
+        router.get('/', checkUserToken(["Manager"]), this.getUsers.bind(this));
         router.post('/login', this.login.bind(this));
         router.post('/', this.createUser.bind(this));
         router.get('/me', this.me.bind(this));
@@ -38,11 +38,9 @@ export class UserController {
                 email: req.body.email,
                 password: hashedPassword,
             });
-            // const platform = req.headers['user-agent'];
             const session = await SessionModel.create({
                 user: user,
                 expirationDate: Date.now() + 3600 * 1000 * 24,
-                // platform: platform
             });
             res.json({
                 token: session._id
