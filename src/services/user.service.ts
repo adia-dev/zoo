@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 import { User, IUser, IRole, Role } from '../models';
-
+import {SecurityUtils} from '../utils';
 export class UserService {
-
+  
     public async getUsers(): Promise<IUser[]> {
         try {
             const users = await User.find().populate('role');
@@ -21,7 +21,9 @@ export class UserService {
                     user.role = role;
                 }
             }
-
+            const salt = process.env.PASSWORD_SALT;
+            const hashedPassword = await SecurityUtils.toSHA512(user.password+salt);
+            user.password = hashedPassword;
             const newUser = await User.create(user);
             return newUser;
         } catch (error) {
