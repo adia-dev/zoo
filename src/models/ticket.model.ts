@@ -17,6 +17,7 @@ export interface ITicketRecord {
 }
 
 export interface ITicket extends Document {
+    valid: boolean;
     ticketType: TicketType;
     spaces: Types.ObjectId[] | ISpace[]
     escapeGameStep: number;
@@ -44,6 +45,7 @@ const TicketRecordSchema: Schema = new Schema(
 
 const TicketSchema: Schema = new Schema(
     {
+        valid: { type: Boolean, default: true },
         ticketType: { type: String, enum: Object.values(TicketType), required: true },
         spaces: [{ type: Schema.Types.ObjectId, ref: 'Space', required: true, default: [] }],
         visitedSpaces: [{ type: TicketRecordSchema, default: [] }],

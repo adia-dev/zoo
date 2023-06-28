@@ -1,9 +1,22 @@
 import { Types } from 'mongoose';
 import { Ticket, ITicket, Space, ISpace, TicketType, ITicketRecord } from '../models';
 import { SpaceService } from './space.service';
+import { RedisClient } from '../config';
+
+enum EntryType {
+    Entry = 'ENTRY',
+    Exit = 'EXIT',
+    Entry_NoTicket = 'ENTRY_NOTICKET', // mouais, on vera si on en a besoin
+    Exit_NoTicket = 'EXIT_NOTICKET',
+}
 
 export class TicketService {
 
+    private redisClient: RedisClient;
+
+    constructor(redisClient: RedisClient) {
+        this.redisClient = redisClient;
+    }
 
     public async getTickets(): Promise<ITicket[]> {
         try {
@@ -26,13 +39,13 @@ export class TicketService {
             for (let i = 0; i < ticket.spaces.length; i++) {
                 const ticketSpace = ticket.spaces[i];
 
-                if (!Types.ObjectId.isValid(ticket.spaces[i].toString())) {
-                    throw new Error(`Invalid space id ${ticket.spaces[i]}`);
+                if (!Types.ObjectId.isValid(ticketSpace.toString())) {
+                    throw new Error(`Invalid space id ${ticketSpace}`);
                 }
-                const space = await Space.findById(ticket.spaces[i]);
+                const space = await Space.findById(ticketSpace);
 
                 if (space == null) {
-                    throw new Error(`Space ${ticket.spaces[i]} not found`);
+                    throw new Error(`Space ${ticketSpace} not found`);
                 }
 
                 if (space.isUnderMaintenance) {
@@ -189,6 +202,8 @@ export class TicketService {
 
             const updatedTicket = await ticket.save();
 
+            await this.addEntryOrExit(ticketId, new Date(), EntryType.Entry);
+
             return updatedTicket;
         } catch (error) {
             if (error instanceof Error) {
@@ -198,8 +213,53 @@ export class TicketService {
         }
     }
 
+    public async addEntryOrExit(ticketId: string, date: Date, type: EntryType): Promise<void> {
+        try {
+            const key = this.getCurrentKey(type);
+            const entryOrExit = { ticketId, date: date.toISOString() };
+
+            if (!await this.redisClient.json.GET(key)) {
+                await this.redisClient.json.set(key, '$', [entryOrExit]);
+            } else {
+                await this.redisClient.json.arrAppend(key, '$', entryOrExit);
+            }
+        } catch (error) {
+            const errorMessage = `Failed to add ${type}`;
+            throw new Error(errorMessage);
+        }
+    }
+
+    public async useTicketToExit(ticketId: string): Promise<void> {
+        try {
+            const ticket = await Ticket.findById(ticketId)
+                .populate('spaces')
+                .populate('visitedSpaces')
+                .populate('lastVisitedSpace');
+
+            if (!ticket) {
+                throw new Error('Ticket not found, please contact the administrator to allow an exit without a ticket');
+            }
+            else if (!ticket.valid) {
+                throw new Error('Ticket already used to exit');
+            }
+
+            await this.addEntryOrExit(ticketId, new Date(), EntryType.Exit);
+            await this.updateTicket(ticketId, { valid: false } as ITicket);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to use ticket to exit');
+        }
+    }
 
 
-    // Add more methods as needed to interact with other fields
 
+    public getKey(date: Date, type: EntryType): string {
+        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}:${type}@${date.getHours()}`;
+    }
+
+    public getCurrentKey(type: EntryType): string {
+        return this.getKey(new Date(), type);
+    }
 }
