@@ -1,9 +1,5 @@
-import { type } from 'os';
 import { RedisClient } from '../config';
-import { Staff, JobTitle } from '../models';
-import { createClient } from 'redis';
-
-
+import { JobTitle, Staff } from '../models';
 
 type StaffRequirement = {
     role: string;
@@ -14,12 +10,19 @@ type ZooState = {
     opened: boolean;
     openedAt: Date | string;
     closedAt: Date | string;
-    entryCount: number;
-    exitCount: number;
+    entries: Array<{ ticketId: string; date: Date | string }>;
+    exits: Array<{ ticketId: string; date: Date | string }>;
     staffRequirements: StaffRequirement[];
     canOpen: boolean;
 };
 
+enum ZooCrowdLevel {
+    Light = 'Light',
+    Moderate = 'Moderate',
+    Average = 'Average',
+    Heavy = 'Heavy',
+    Full = 'Full',
+}
 
 export class ZooService {
     private redisClient: RedisClient;
@@ -56,7 +59,11 @@ export class ZooService {
 
             const [receptionistCount, caretakerCount, cleanerCount, vendorCount] = staffCounts;
 
-            const canOpen = receptionistCount >= 1 && caretakerCount >= 1 && cleanerCount >= 1 && vendorCount >= 1;
+            const canOpen =
+                receptionistCount >= 1 &&
+                caretakerCount >= 1 &&
+                cleanerCount >= 1 &&
+                vendorCount >= 1;
             let missing: JobTitle[] = [];
 
             if (!canOpen) {
@@ -102,7 +109,7 @@ export class ZooService {
         try {
             if (await this.isOpened()) {
                 throw new Error('Zoo is already open');
-            } else if (!await this.canZooOpen()) {
+            } else if (!(await this.canZooOpen()).canOpen) {
                 throw new Error('Zoo cannot open, please check staff requirements');
             }
 
@@ -119,8 +126,7 @@ export class ZooService {
         try {
             if (await this.isClosed()) {
                 throw new Error('Zoo is already closed');
-            }
-            else if (await this.getEntryCount() > await this.getExitCount()) {
+            } else if (await this.getEntriesCount() > await this.getExitsCount()) {
                 throw new Error('Zoo cannot close, there are still visitors inside');
             }
 
@@ -140,13 +146,13 @@ export class ZooService {
                 state = 'open';
                 await this.redisClient.set('openedAt', new Date().toISOString());
                 await this.redisClient.set('closedAt', '');
-                await this.redisClient.set('entryCount', 0);
-                await this.redisClient.set('exitCount', 0);
+                await this.redisClient.set('entries', JSON.stringify([]));
+                await this.redisClient.set('exits', JSON.stringify([]));
             } else {
                 state = 'closed';
                 await this.redisClient.set('closedAt', new Date().toISOString());
             }
-            this.redisClient.set('zooState', state);
+            await this.redisClient.set('zooState', state);
         } catch (error) {
             throw new Error('Failed to set zoo state');
         }
@@ -155,13 +161,13 @@ export class ZooService {
     public async getZooState(): Promise<ZooState> {
         try {
             const zooState: ZooState = {
-                opened: await this.redisClient.get('zooState') === 'open',
+                opened: (await this.redisClient.get('zooState')) === 'open',
                 openedAt: await this.redisClient.get('openedAt') || 'Not yet opened',
                 closedAt: await this.redisClient.get('closedAt') || 'Not yet closed',
-                entryCount: await this.getEntryCount(),
-                exitCount: await this.getExitCount(),
+                entries: await this.getEntries(),
+                exits: await this.getExits(),
                 staffRequirements: await this.getStaffRequirements(),
-                canOpen: (await this.canZooOpen()).canOpen
+                canOpen: (await this.canZooOpen()).canOpen,
             };
 
             return zooState;
@@ -170,40 +176,74 @@ export class ZooService {
         }
     }
 
-
-    public async incrementEntryCount(): Promise<number> {
+    public async incrementEntries(ticketId: string, date: Date): Promise<number> {
         try {
-            return await this.redisClient.incr('entryCount');
+            const entry = { ticketId, date };
+            const entries = await this.getEntries();
+            entries.push(entry);
+            await this.redisClient.set('entries', JSON.stringify(entries));
+            return entries.length;
         } catch (error) {
             throw new Error('Failed to increment entry count');
         }
     }
 
-    public async getEntryCount(): Promise<number> {
+    public async getEntries(): Promise<Array<{ ticketId: string; date: Date | string }>> {
         try {
-            const count = await this.redisClient.get('entryCount');
-            return count ? parseInt(count) : 0;
+            const entriesJson = await this.redisClient.get('entries');
+            return entriesJson ? JSON.parse(entriesJson) : [];
         } catch (error) {
             throw new Error('Failed to get entry count');
         }
     }
 
-    public async incrementExitCount(): Promise<number> {
+
+    public async getEntriesCount(): Promise<number> {
         try {
-            return await this.redisClient.incr('exitCount');
+            const entries = await this.getEntries();
+            return entries.length;
+        } catch (error) {
+            throw new Error('Failed to get entry count');
+        }
+    }
+
+    public async incrementExits(ticketId: string, date: Date): Promise<number> {
+        try {
+            const exit = { ticketId, date };
+            const exits = await this.getExits();
+            exits.push(exit);
+            await this.redisClient.set('exits', JSON.stringify(exits));
+            return exits.length;
         } catch (error) {
             throw new Error('Failed to increment exit count');
         }
     }
 
-    public async getExitCount(): Promise<number> {
+    public async getExits(): Promise<Array<{ ticketId: string; date: Date | string }>> {
         try {
-            const count = await this.redisClient.get('exitCount');
-            return count ? parseInt(count) : 0;
+            const exitsJson = await this.redisClient.get('exits');
+            return exitsJson ? JSON.parse(exitsJson) : [];
         } catch (error) {
             throw new Error('Failed to get exit count');
         }
     }
 
-    // You can implement other methods related to the zoo state and data management using Redis here
+    public async getExitsCount(): Promise<number> {
+        try {
+            const exits = await this.getExits();
+            return exits.length;
+        } catch (error) {
+            throw new Error('Failed to get exit count');
+        }
+    }
+
+    public async getCrowdMetrics(): Promise<number> {
+        try {
+            const entries = await this.getEntries();
+            const exits = await this.getExits();
+            return entries.length - exits.length;
+        } catch (error) {
+            throw new Error('Failed to calculate zoo attendance');
+        }
+    }
 }

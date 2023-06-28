@@ -19,8 +19,8 @@ export class ZooController {
         router.get('/zoo-state', this.getZooState.bind(this));
         router.post('/open-zoo', this.openZoo.bind(this));
         router.post('/close-zoo', this.closeZoo.bind(this));
-        router.get('/entry-count', this.getEntryCount.bind(this));
-        router.get('/exit-count', this.getExitCount.bind(this));
+        router.get('/entries-count', this.getEntriesCount.bind(this));
+        router.get('/exits-count', this.getExitsCount.bind(this));
 
         return router;
     }
@@ -118,21 +118,21 @@ export class ZooController {
         }
     }
 
-    async getEntryCount(req: Request, res: Response): Promise<void> {
+    async getEntriesCount(req: Request, res: Response): Promise<void> {
         try {
-            const entryCount = await this.zooService.getEntryCount();
-            res.status(200).json({ entryCount });
+            const entriesCount = await this.zooService.getEntriesCount();
+            res.status(200).json({ entriesCount });
         } catch (error) {
-            res.status(500).json({ error: 'Failed to get entry count' });
+            res.status(500).json({ error: 'Failed to get entries count' });
         }
     }
 
-    async getExitCount(req: Request, res: Response): Promise<void> {
+    async getExitsCount(req: Request, res: Response): Promise<void> {
         try {
-            const exitCount = await this.zooService.getExitCount();
-            res.status(200).json({ exitCount });
+            const exitsCount = await this.zooService.getExitsCount();
+            res.status(200).json({ exitsCount });
         } catch (error) {
-            res.status(500).json({ error: 'Failed to get exit count' });
+            res.status(500).json({ error: 'Failed to get exits count' });
         }
     }
 }
