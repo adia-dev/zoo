@@ -1,6 +1,6 @@
 import { EIGHT_TO_FOUR, IStaff, I_DONT_DO_NOTHING_BUT_I_GET_PAID_AKA_ADMINS, JobSchedule, JobTitle, NINE_TO_FIVE, Staff } from '../models/staff.model';
 import { ISpace, Space } from '../models/space.model';
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 
 export interface IStaffRequestParams {
     day?: string;
@@ -34,10 +34,10 @@ export class StaffService {
     public async checkWeeklyStaffRequirements(): Promise<boolean> {
         try {
             const requiredJobTitles: JobTitle[] = [
-                JobTitle.Registrar,
+                JobTitle.Cleaner,
                 JobTitle.Veterinarian,
                 JobTitle.Caretaker,
-                JobTitle.Seller
+                JobTitle.Receptionist
             ];
 
             const staffByJobTitle: { [key in JobTitle]?: any[] } = {};
@@ -164,7 +164,7 @@ export class StaffService {
             case JobTitle.Keeper:
             case JobTitle.Caretaker:
                 return NINE_TO_FIVE;
-            case JobTitle.Registrar:
+            case JobTitle.Cleaner:
             case JobTitle.Veterinarian:
                 return EIGHT_TO_FOUR;
             default:

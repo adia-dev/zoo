@@ -7,6 +7,7 @@ services:
   #   restart: always
   #   depends_on:
   #     - mongo
+  #     - redis
   #   ports:
   #     - "80:3000"
   #   environment:
@@ -23,5 +24,9 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
-  # for later:
-  # grafana:
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"

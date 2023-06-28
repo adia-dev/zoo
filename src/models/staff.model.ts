@@ -5,10 +5,11 @@ export enum JobTitle {
     Caretaker = 'Caretaker',
     Keeper = 'Keeper',
     Veterinarian = 'Veterinarian',
-    Registrar = 'Registrar',
+    Cleaner = 'Cleaner',
+    Vendor = 'Vendor',
     Director = 'Director',
     Manager = 'Manager',
-    Seller = 'Seller'
+    Receptionist = 'Receptionist'
 }
 
 interface JobSchedule {
