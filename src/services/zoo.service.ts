@@ -1,6 +1,24 @@
+import { type } from 'os';
 import { RedisClient } from '../config';
 import { Staff, JobTitle } from '../models';
 import { createClient } from 'redis';
+
+
+
+type StaffRequirement = {
+    role: string;
+    count: number;
+};
+
+type ZooState = {
+    opened: boolean;
+    openedAt: Date | string;
+    closedAt: Date | string;
+    entryCount: number;
+    exitCount: number;
+    staffRequirements: StaffRequirement[];
+    canOpen: boolean;
+};
 
 
 export class ZooService {
@@ -10,7 +28,7 @@ export class ZooService {
         this.redisClient = redisClient;
     }
 
-    public async getStaffRequirements(): Promise<any> {
+    public async getStaffRequirements(): Promise<StaffRequirement[]> {
         try {
             const requiredRoles = ['Receptionist', 'Caretaker', 'Cleaner', 'Vendor'];
             const staffRequirements = await Promise.all(
@@ -62,23 +80,96 @@ export class ZooService {
         }
     }
 
-    public async setZooState(opened: boolean): Promise<void> {
+    public async isOpened(): Promise<boolean> {
         try {
-            const state = opened ? 'open' : 'closed';
+            const { opened } = await this.getZooState();
+            return opened;
+        } catch (error) {
+            throw new Error('Failed to check if the zoo is opened');
+        }
+    }
+
+    public async isClosed(): Promise<boolean> {
+        try {
+            const { opened } = await this.getZooState();
+            return !opened;
+        } catch (error) {
+            throw new Error('Failed to check if the zoo is closed');
+        }
+    }
+
+    public async openZoo(): Promise<void> {
+        try {
+            if (await this.isOpened()) {
+                throw new Error('Zoo is already open');
+            } else if (!await this.canZooOpen()) {
+                throw new Error('Zoo cannot open, please check staff requirements');
+            }
+
+            await this.setZooOpenState(true);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to check if the zoo is already open');
+        }
+    }
+
+    public async closeZoo(): Promise<void> {
+        try {
+            if (await this.isClosed()) {
+                throw new Error('Zoo is already closed');
+            }
+            else if (await this.getEntryCount() > await this.getExitCount()) {
+                throw new Error('Zoo cannot close, there are still visitors inside');
+            }
+
+            await this.setZooOpenState(false);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to check if the zoo is already closed');
+        }
+    }
+
+    public async setZooOpenState(opened: boolean): Promise<void> {
+        try {
+            let state: string;
+            if (opened) {
+                state = 'open';
+                await this.redisClient.set('openedAt', new Date().toISOString());
+                await this.redisClient.set('closedAt', '');
+                await this.redisClient.set('entryCount', 0);
+                await this.redisClient.set('exitCount', 0);
+            } else {
+                state = 'closed';
+                await this.redisClient.set('closedAt', new Date().toISOString());
+            }
             this.redisClient.set('zooState', state);
         } catch (error) {
             throw new Error('Failed to set zoo state');
         }
     }
 
-    public async getZooState(): Promise<boolean | null> {
+    public async getZooState(): Promise<ZooState> {
         try {
-            const state = await this.redisClient.get('zooState');
-            return state === 'open';
+            const zooState: ZooState = {
+                opened: await this.redisClient.get('zooState') === 'open',
+                openedAt: await this.redisClient.get('openedAt') || 'Not yet opened',
+                closedAt: await this.redisClient.get('closedAt') || 'Not yet closed',
+                entryCount: await this.getEntryCount(),
+                exitCount: await this.getExitCount(),
+                staffRequirements: await this.getStaffRequirements(),
+                canOpen: (await this.canZooOpen()).canOpen
+            };
+
+            return zooState;
         } catch (error) {
             throw new Error('Failed to get zoo state');
         }
     }
+
 
     public async incrementEntryCount(): Promise<number> {
         try {
