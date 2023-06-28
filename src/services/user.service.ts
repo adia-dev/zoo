@@ -46,9 +46,11 @@ export class UserService {
 
     public async updateUser(userId: string, updatedUser: IUser): Promise<IUser | null> {
         try {
+            
             const user = await User.findByIdAndUpdate(userId, updatedUser, { new: true }).populate('role');
             return user;
         } catch (error) {
+            console.log(error);
             throw new Error('Failed to update user');
         }
     }

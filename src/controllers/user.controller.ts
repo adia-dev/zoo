@@ -103,7 +103,12 @@ export class UserController {
     public async updateUser(req: Request, res: Response): Promise<void> {
         try {
             const userId: string = req.params.id;
-            const updatedUserData: IUser = req.body;
+            let updatedUserData: IUser = req.body;
+            
+            if (req.body.password ){
+                const salt = process.env.PASSWORD_SALT;
+                updatedUserData.password=  SecurityUtils.toSHA512(updatedUserData.password+salt);
+            }
             const updatedUser = await this.userService.updateUser(userId, updatedUserData);
             if (updatedUser) {
                 res.status(200).json(updatedUser);
