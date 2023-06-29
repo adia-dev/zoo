@@ -1,5 +1,5 @@
 import { Request, RequestHandler } from 'express';
-import { IUser, ISession, SessionModel, IRole} from '../models';
+import { IUser, ISession, SessionModel, IRole } from '../models';
 
 declare module 'express' {
   export interface Request {
@@ -7,7 +7,8 @@ declare module 'express' {
   }
 }
 
-export function checkUserToken(roles?:string[]): RequestHandler {
+export function checkUserToken(roles?: string[]): RequestHandler {
+  console.log(`Check user token with roles ${roles}`);
   return async function (req: Request, res, next) {
     try {
       const authorization = req.headers['authorization'];
@@ -41,17 +42,17 @@ export function checkUserToken(roles?:string[]): RequestHandler {
       }
 
 
-     if (roles ){
+      if (roles) {
         const role = (session.user as IUser).role
-        if (role ){
-            if (roles.indexOf((role as IRole).name) === -1){
-                res.status(403).end();
-                return;
-            }
+        if (role) {
+          if (roles.indexOf((role as IRole).name) === -1) {
+            res.status(403).end();
+            return;
+          }
         }
-        
-     
-     }
+
+
+      }
       req.user = session.user as IUser;
       next();
     } catch (error) {

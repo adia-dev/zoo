@@ -3,6 +3,7 @@ import { ITicket } from '../models/ticket.model';
 import { TicketService } from '../services/ticket.service';
 import { Types } from 'mongoose';
 import { RedisClient } from '../config';
+import { checkUserToken } from '../middlewares';
 
 export class TicketController {
     private ticketService: TicketService;
@@ -14,11 +15,11 @@ export class TicketController {
     routes(): Router {
         const router = Router();
 
-        router.get('/', this.getTickets.bind(this));
-        router.post('/', this.createTicket.bind(this));
+        router.get('/', checkUserToken(["Admin", "Manager"]), this.getTickets.bind(this));
+        router.post('/', checkUserToken(["Admin", "Manager"]), this.createTicket.bind(this));
         router.get('/:id', this.getTicketById.bind(this));
         router.put('/:id', this.updateTicket.bind(this));
-        router.delete('/:id', this.deleteTicket.bind(this));
+        router.delete('/:id', checkUserToken(["Admin", "Manager"]), this.deleteTicket.bind(this));
         router.post('/:id/use', this.useTicket.bind(this));
         router.post('/:id/exit', this.useTicketToExit.bind(this));
 
