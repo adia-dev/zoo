@@ -9,6 +9,7 @@ const initClient = (): RedisClient => {
 
     client.on('error', (error) => {
         console.error(error);
+        process.exit(1);
     });
 
     client.on('connect', () => {

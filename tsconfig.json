@@ -4,11 +4,14 @@
     "target": "es5",
     "sourceMap": true,
     "outDir": "dist",
-    
-    "strict": true,
-    "noImplicitAny": true
+    "strict": false,
+    "noImplicitAny": true,
+    "skipLibCheck": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "./node_modules",
+    "./node_modules/*",
+    "**/*.test.ts"
   ]
 }

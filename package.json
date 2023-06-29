@@ -1,11 +1,11 @@
 {
   "name": "planade-zoo",
   "version": "0.1.0",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --watch './**/*.ts' --exec ts-node src/index.ts",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "test": "SET NODE_ENV=test & jest"
   },
   "keywords": [],
