@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { ZooService } from '../services';
 import { RedisClient } from '../config/redis';
+import {checkUserToken} from "../middlewares";
 
 export class ZooController {
     private zooService: ZooService;
@@ -21,6 +22,8 @@ export class ZooController {
         router.post('/close-zoo', this.closeZoo.bind(this));
         router.get('/entries-count', this.getEntriesCount.bind(this));
         router.get('/exits-count', this.getExitsCount.bind(this));
+        router.get('/open-zoo-night', checkUserToken(["Admin"]), this.openZooNight.bind(this));
+
 
         return router;
     }
@@ -79,7 +82,6 @@ export class ZooController {
 
     async openZoo(req: Request, res: Response): Promise<void> {
         try {
-
             if (req.query.force) {
                 await this.zooService.setZooOpenState(true);
                 res.status(200).json({ message: 'Zoo forcefuly opened successfully' });
@@ -88,6 +90,25 @@ export class ZooController {
 
             await this.zooService.openZoo();
             res.status(200).json({ message: 'Zoo opened successfully' });
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(401).json({ error: error.message })
+                return;
+            }
+            res.status(500).json({ error: 'Failed to open the zoo' });
+        }
+    }
+
+    async openZooNight(req: Request, res: Response): Promise<void> {
+        try {
+            if (req.query.night) {
+                await this.zooService.setZooOpenState(true);
+                res.status(200).json({ message: 'Zoo is open for the night' });
+                return;
+            }
+
+            await this.zooService.openZooNight();
+            res.status(200).json({ message: 'Zoo opened successfully for the night' });
         } catch (error) {
             if (error instanceof Error) {
                 res.status(401).json({ error: error.message })

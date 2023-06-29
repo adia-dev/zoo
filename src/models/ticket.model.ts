@@ -3,6 +3,7 @@ import { ISpace } from './space.model';
 
 export enum TicketType {
     DayPass = 'DayPass',
+    NightPass = 'NightPass',
     WeekendPass = 'WeekendPass',
     AnnualPass = 'AnnualPass',
     MonthlyPass = 'MonthlyPass',

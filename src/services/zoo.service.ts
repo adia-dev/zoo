@@ -122,6 +122,23 @@ export class ZooService {
         }
     }
 
+    public async openZooNight(): Promise<void> {
+        try {
+            if (await this.isOpened()) {
+                throw new Error('Zoo is already open');
+            } else if (!(await this.canZooOpen()).canOpen) {
+                throw new Error('Zoo cannot open, please check staff requirements');
+            }
+
+            await this.setZooOpenState(true);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to check if the zoo is already open');
+        }
+    }
+
     public async closeZoo(): Promise<void> {
         try {
             if (await this.isClosed()) {
