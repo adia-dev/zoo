@@ -21,6 +21,8 @@ export class StaffController {
         router.get('/schedule/:schedule', this.getStaffBySchedule);
         router.put('/:id/assign-space/', this.assignStaffToSpace);
         router.get('/weekly-staff-requirements', this.checkWeeklyStaffRequirements);
+        router.post('/:id/check-in', this.checkInStaff);
+        router.post('/:id/check-out', this.checkOutStaff);
 
         return router;
     }
@@ -151,6 +153,42 @@ export class StaffController {
             const updatedStaff = await this.staffService.assignStaffToSpace(staffId, spaceId);
             if (updatedStaff) {
                 res.json(updatedStaff);
+            } else {
+                res.status(404).json({ error: 'Staff not found' });
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(500).json({ error: error.message });
+                return;
+            }
+            res.status(500).json({ error: 'Failed to update staff' });
+        }
+    }
+
+    public checkInStaff = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const staffId: string = req.params.id;
+            const updatedStaff = await this.staffService.checkInStaff(staffId, new Date());
+            if (updatedStaff) {
+                res.json({ message: `${updatedStaff.firstName} ${updatedStaff.lastName} checked in successfully at ${updatedStaff.checkInTime}` });
+            } else {
+                res.status(404).json({ error: 'Staff not found' });
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(401).json({ error: error.message });
+                return;
+            }
+            res.status(500).json({ error: 'Failed to update staff' });
+        }
+    }
+
+    public checkOutStaff = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const staffId: string = req.params.id;
+            const updatedStaff = await this.staffService.checkOutStaff(staffId, new Date());
+            if (updatedStaff) {
+                res.json({ message: `${updatedStaff.firstName} ${updatedStaff.lastName} checked out successfully at ${updatedStaff.checkOutTime}` });
             } else {
                 res.status(404).json({ error: 'Staff not found' });
             }

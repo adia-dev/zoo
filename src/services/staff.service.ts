@@ -156,6 +156,47 @@ export class StaffService {
         }
     }
 
+    public async checkInStaff(staffId: string, checkInTime: Date): Promise<IStaff | null> {
+        try {
+            const staff = await Staff.findById(staffId);
+            if (!staff) {
+                return null;
+            }
+
+            if (staff.isWorking) {
+                throw new Error('Staff is already working');
+            }
+
+            staff.isWorking = true;
+            staff.checkInTime = checkInTime;
+            await staff.save();
+            return staff;
+
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    public async checkOutStaff(staffId: string, checkOutTime: Date): Promise<IStaff | null> {
+        try {
+            const staff = await Staff.findById(staffId);
+            if (!staff) {
+                return null;
+            }
+
+            if (!staff.isWorking) {
+                throw new Error('Staff is not working');
+            }
+
+            staff.isWorking = false;
+            staff.checkOutTime = checkOutTime;
+            await staff.save();
+            return staff;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     private getDefaultJobSchedule(jobTitle: string): JobSchedule[] {
         switch (jobTitle) {
             case JobTitle.Director:
@@ -203,4 +244,6 @@ export class StaffService {
         }
         return filters;
     }
+
+
 }
