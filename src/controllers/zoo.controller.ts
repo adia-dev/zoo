@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { ZooService } from '../services';
 import { RedisClient } from '../config/redis';
-import {checkUserToken} from "../middlewares";
+import { checkUserToken } from "../middlewares";
 
 export class ZooController {
     private zooService: ZooService;
@@ -19,10 +19,10 @@ export class ZooController {
         router.get('/is-closed', this.isClosed.bind(this));
         router.get('/zoo-state', this.getZooState.bind(this));
         router.post('/open-zoo', this.openZoo.bind(this));
+        router.post('/open-zoo-night', checkUserToken(["Admin"]), this.openZooNight.bind(this));
         router.post('/close-zoo', this.closeZoo.bind(this));
         router.get('/entries-count', this.getEntriesCount.bind(this));
         router.get('/exits-count', this.getExitsCount.bind(this));
-        router.get('/open-zoo-night', checkUserToken(["Admin"]), this.openZooNight.bind(this));
 
 
         return router;
