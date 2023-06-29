@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { StaffService } from '../services/staff.service';
 import { IStaff, JobSchedule, JobTitle } from '../models/staff.model';
+import { checkUserToken } from "../middlewares";
 
 export class StaffController {
     private staffService: StaffService;
@@ -12,7 +13,7 @@ export class StaffController {
     public routes(): Router {
         const router = Router();
 
-        router.get('/', this.getAllStaff);
+        router.get('/', checkUserToken(["Manager"]), this.getAllStaff);
         router.post('/', this.createStaff);
         router.get('/:id', this.getStaffById);
         router.put('/:id', this.updateStaff);
