@@ -2,20 +2,18 @@ import { Types } from 'mongoose';
 import { Ticket, ITicket, Space, ISpace, TicketType, ITicketRecord } from '../models';
 import { SpaceService } from './space.service';
 import { RedisClient } from '../config';
+import { EntryType, ZooService } from './zoo.service';
 
-enum EntryType {
-    Entry = 'ENTRY',
-    Exit = 'EXIT',
-    Entry_NoTicket = 'ENTRY_NOTICKET', // mouais, on vera si on en a besoin
-    Exit_NoTicket = 'EXIT_NOTICKET',
-}
+
 
 export class TicketService {
 
     private redisClient: RedisClient;
+    private zooService: ZooService;
 
     constructor(redisClient: RedisClient) {
         this.redisClient = redisClient;
+        this.zooService = new ZooService(redisClient);
     }
 
     public async getTickets(): Promise<ITicket[]> {
@@ -148,9 +146,6 @@ export class TicketService {
                 throw new Error('You have already visited all the spaces');
             }
 
-
-
-
             // Check if the space is allowed for the ticket
             const spaceIds = ticket.spaces.map((space) => {
                 if (space instanceof Types.ObjectId) {
@@ -202,8 +197,6 @@ export class TicketService {
 
             const updatedTicket = await ticket.save();
 
-            await this.addEntryOrExit(ticketId, new Date(), EntryType.Entry);
-
             return updatedTicket;
         } catch (error) {
             if (error instanceof Error) {
@@ -213,28 +206,11 @@ export class TicketService {
         }
     }
 
-    public async addEntryOrExit(ticketId: string, date: Date, type: EntryType): Promise<void> {
-        try {
-            const key = this.getCurrentKey(type);
-            const entryOrExit = { ticketId, date: date.toISOString() };
 
-            if (!await this.redisClient.json.GET(key)) {
-                await this.redisClient.json.set(key, '$', [entryOrExit]);
-            } else {
-                await this.redisClient.json.arrAppend(key, '$', entryOrExit);
-            }
-        } catch (error) {
-            const errorMessage = `Failed to add ${type}`;
-            throw new Error(errorMessage);
-        }
-    }
 
     public async useTicketToExit(ticketId: string): Promise<void> {
         try {
-            const ticket = await Ticket.findById(ticketId)
-                .populate('spaces')
-                .populate('visitedSpaces')
-                .populate('lastVisitedSpace');
+            const ticket = await Ticket.findById(ticketId);
 
             if (!ticket) {
                 throw new Error('Ticket not found, please contact the administrator to allow an exit without a ticket');
@@ -243,7 +219,7 @@ export class TicketService {
                 throw new Error('Ticket already used to exit');
             }
 
-            await this.addEntryOrExit(ticketId, new Date(), EntryType.Exit);
+            await this.zooService.addEntryOrExit(ticketId, new Date(), EntryType.Exit);
             await this.updateTicket(ticketId, { valid: false } as ITicket);
         } catch (error) {
             if (error instanceof Error) {
@@ -254,12 +230,28 @@ export class TicketService {
     }
 
 
+    public async useTicketToEnter(ticketId: string): Promise<void> {
+        try {
+            const ticket = await Ticket.findById(ticketId);
 
-    public getKey(date: Date, type: EntryType): string {
-        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}:${type}@${date.getHours()}`;
-    }
+            if (!ticket) {
+                throw new Error('Ticket not found, please contact the administrator to allow an entry without a ticket');
+            }
+            else if (!ticket.valid) {
+                throw new Error('Ticket is not valid, it seems to have been used to exit');
+            } else if (ticket.validUntil < new Date()) {
+                throw new Error(`Ticket expired on ${ticket.validUntil}`);
+            } else if (ticket.validFrom > new Date()) {
+                throw new Error(`Ticket not valid yet, will be ready to use at ${ticket.validFrom}`);
+            }
 
-    public getCurrentKey(type: EntryType): string {
-        return this.getKey(new Date(), type);
+            await this.zooService.addEntryOrExit(ticketId, new Date(), EntryType.Entry);
+            await this.updateTicket(ticketId, { valid: false } as ITicket);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to use ticket to enter');
+        }
     }
 }
