@@ -41,6 +41,10 @@ export class AnimalController {
             const newAnimal = await this.animalService.createAnimal(animalData);
             res.status(201).json(newAnimal);
         } catch (error) {
+            if(error instanceof Error) {
+                res.status(400).json({error: error.message});
+                return;
+            }
             res.status(500).json({ error: 'Failed to create animal' });
         }
     };
@@ -238,7 +242,7 @@ export class AnimalController {
             }
         }
 
-        if (animalData.treatments.length > 0) {
+        if (animalData.treatments?.length > 0) {
 
             for (const field in treatmentRequiredFields) {
                 if (!animalData.treatments[field]) {
