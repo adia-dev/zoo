@@ -3,6 +3,7 @@ import { ISpace } from './space.model';
 
 export enum TicketType {
     DayPass = 'DayPass',
+    NightPass = 'NightPass',
     WeekendPass = 'WeekendPass',
     AnnualPass = 'AnnualPass',
     MonthlyPass = 'MonthlyPass',
@@ -17,6 +18,8 @@ export interface ITicketRecord {
 }
 
 export interface ITicket extends Document {
+    used: boolean;
+    valid: boolean;
     ticketType: TicketType;
     spaces: Types.ObjectId[] | ISpace[]
     escapeGameStep: number;
@@ -44,6 +47,8 @@ const TicketRecordSchema: Schema = new Schema(
 
 const TicketSchema: Schema = new Schema(
     {
+        used: { type: Boolean, default: false },
+        valid: { type: Boolean, default: true },
         ticketType: { type: String, enum: Object.values(TicketType), required: true },
         spaces: [{ type: Schema.Types.ObjectId, ref: 'Space', required: true, default: [] }],
         visitedSpaces: [{ type: TicketRecordSchema, default: [] }],

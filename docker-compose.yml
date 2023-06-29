@@ -26,7 +26,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: root
 
   redis:
-    image: redis
+    image: redis/redis-stack
     restart: always
     ports:
       - "6379:6379"

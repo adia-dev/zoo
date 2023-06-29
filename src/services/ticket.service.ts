@@ -1,9 +1,20 @@
 import { Types } from 'mongoose';
 import { Ticket, ITicket, Space, ISpace, TicketType, ITicketRecord } from '../models';
 import { SpaceService } from './space.service';
+import { RedisClient } from '../config';
+import { EntryType, ZooService } from './zoo.service';
+
+
 
 export class TicketService {
 
+    private redisClient: RedisClient;
+    private zooService: ZooService;
+
+    constructor(redisClient: RedisClient) {
+        this.redisClient = redisClient;
+        this.zooService = new ZooService(redisClient);
+    }
 
     public async getTickets(): Promise<ITicket[]> {
         try {
@@ -26,13 +37,13 @@ export class TicketService {
             for (let i = 0; i < ticket.spaces.length; i++) {
                 const ticketSpace = ticket.spaces[i];
 
-                if (!Types.ObjectId.isValid(ticket.spaces[i].toString())) {
-                    throw new Error(`Invalid space id ${ticket.spaces[i]}`);
+                if (!Types.ObjectId.isValid(ticketSpace.toString())) {
+                    throw new Error(`Invalid space id ${ticketSpace}`);
                 }
-                const space = await Space.findById(ticket.spaces[i]);
+                const space = await Space.findById(ticketSpace);
 
                 if (space == null) {
-                    throw new Error(`Space ${ticket.spaces[i]} not found`);
+                    throw new Error(`Space ${ticketSpace} not found`);
                 }
 
                 if (space.isUnderMaintenance) {
@@ -135,9 +146,6 @@ export class TicketService {
                 throw new Error('You have already visited all the spaces');
             }
 
-
-
-
             // Check if the space is allowed for the ticket
             const spaceIds = ticket.spaces.map((space) => {
                 if (space instanceof Types.ObjectId) {
@@ -200,6 +208,50 @@ export class TicketService {
 
 
 
-    // Add more methods as needed to interact with other fields
+    public async useTicketToExit(ticketId: string): Promise<void> {
+        try {
+            const ticket = await Ticket.findById(ticketId);
 
+            if (!ticket) {
+                throw new Error('Ticket not found, please contact the administrator to allow an exit without a ticket');
+            }
+            else if (!ticket.valid) {
+                throw new Error('Ticket already used to exit');
+            }
+
+            await this.zooService.addEntryOrExit(ticketId, new Date(), EntryType.Exit);
+            await this.updateTicket(ticketId, { valid: false } as ITicket);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to use ticket to exit');
+        }
+    }
+
+
+    public async useTicketToEnter(ticketId: string): Promise<void> {
+        try {
+            const ticket = await Ticket.findById(ticketId);
+
+            if (!ticket) {
+                throw new Error('Ticket not found, please contact the administrator to allow an entry without a ticket');
+            }
+            else if (!ticket.valid) {
+                throw new Error('Ticket is not valid, it seems to have been used to exit');
+            } else if (ticket.validUntil < new Date()) {
+                throw new Error(`Ticket expired on ${ticket.validUntil}`);
+            } else if (ticket.validFrom > new Date()) {
+                throw new Error(`Ticket not valid yet, will be ready to use at ${ticket.validFrom}`);
+            }
+
+            await this.zooService.addEntryOrExit(ticketId, new Date(), EntryType.Entry);
+            await this.updateTicket(ticketId, { valid: false } as ITicket);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error('Failed to use ticket to enter');
+        }
+    }
 }

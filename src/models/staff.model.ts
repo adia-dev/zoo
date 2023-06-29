@@ -33,7 +33,9 @@ export interface IStaff extends Document {
     email: string;
     isAdmin: boolean;
     assignedSpace: ISpace | null;
-    isworking: boolean;
+    isWorking: boolean;
+    checkInTime?: Date;
+    checkOutTime?: Date;
 }
 
 const NINE_TO_FIVE: JobSchedule[] = [
@@ -82,6 +84,9 @@ const StaffSchema: Schema = new Schema(
         email: { type: String, required: true },
         isAdmin: { type: Boolean, required: true },
         assignedSpace: { type: Schema.Types.ObjectId, ref: 'Space' },
+        isWorking: { type: Boolean, required: true, default: false },
+        checkInTime: { type: Date },
+        checkOutTime: { type: Date },
     },
     {
         timestamps: true,

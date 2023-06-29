@@ -15,16 +15,17 @@ export class UserController {
 
         router.get('/', checkUserToken(["Manager"]), this.getUsers.bind(this));
         router.post('/login', this.login.bind(this));
-        router.post('/', this.createUser.bind(this));
+        router.post('/', checkUserToken(["Admin"]), this.createUser.bind(this));
         router.get('/me', this.me.bind(this));
 
         router.get('/:id', this.getUserById.bind(this));
         router.put('/:id', this.updateUser.bind(this));
-        router.delete('/:id', this.deleteUser.bind(this));
-        router.put('/:id/role', this.updateUserRole.bind(this));
+        router.delete('/:id', checkUserToken(["User", "Admin"]), this.deleteUser.bind(this));
+        router.put('/:id/role', checkUserToken(["Admin"]), this.updateUserRole.bind(this));
 
         return router;
     }
+
     async login(req: Request, res: Response) {
         if (!req.body || typeof req.body.email !== "string" || typeof req.body.password !== "string") {
             res.status(400).end();
@@ -104,10 +105,10 @@ export class UserController {
         try {
             const userId: string = req.params.id;
             let updatedUserData: IUser = req.body;
-            
-            if (req.body.password ){
+
+            if (req.body.password) {
                 const salt = process.env.PASSWORD_SALT;
-                updatedUserData.password=  SecurityUtils.toSHA512(updatedUserData.password+salt);
+                updatedUserData.password = SecurityUtils.toSHA512(updatedUserData.password + salt);
             }
             const updatedUser = await this.userService.updateUser(userId, updatedUserData);
             if (updatedUser) {

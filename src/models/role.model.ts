@@ -10,7 +10,9 @@ export enum RoleTitle {
     Admin = 'Admin',
     User = 'User',
     Manager = 'Manager',
+    Director = 'Director',
     Guest = 'Guest',
+    Staff = 'Staff',
 }
 
 const RoleSchema: Schema = new Schema({
