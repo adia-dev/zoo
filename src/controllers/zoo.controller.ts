@@ -141,7 +141,7 @@ export class ZooController {
 
     async getEntriesCount(req: Request, res: Response): Promise<void> {
         try {
-            const entriesCount = await this.zooService.getEntriesCount();
+            const entriesCount = (await this.zooService.getEntriesCount()) || 0;
             res.status(200).json({ entriesCount });
         } catch (error) {
             res.status(500).json({ error: 'Failed to get entries count' });
@@ -150,7 +150,7 @@ export class ZooController {
 
     async getExitsCount(req: Request, res: Response): Promise<void> {
         try {
-            const exitsCount = await this.zooService.getExitsCount();
+            const exitsCount = (await this.zooService.getExitsCount) || 0;
             res.status(200).json({ exitsCount });
         } catch (error) {
             res.status(500).json({ error: 'Failed to get exits count' });

@@ -22,6 +22,6 @@ v1Router.use("/api/v1/spaces", checkUserToken(["Admin", "Manager"]), spaceContro
 v1Router.use("/api/v1/tickets", ticketController.routes());
 v1Router.use("/api/v1/staff", checkUserToken(["Admin", "Manager"]), staffController.routes());
 v1Router.use("/api/v1/animals", checkUserToken(["Admin", "Manager", "Staff"]), animalController.routes());
-v1Router.use("/api/v1/zoo", checkUserToken(["Admin", "Manager", "Director"]), zooController.routes());
+v1Router.use("/api/v1/zoo", zooController.routes());
 
 export { v1Router };

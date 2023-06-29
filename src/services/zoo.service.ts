@@ -6,6 +6,13 @@ type StaffRequirement = {
     count: number;
 };
 
+export enum EntryType {
+    Entry = 'ENTRY',
+    Exit = 'EXIT',
+    Entry_NoTicket = 'ENTRY_NOTICKET', // mouais, on vera si on en a besoin
+    Exit_NoTicket = 'EXIT_NOTICKET',
+}
+
 type ZooState = {
     opened: boolean;
     openedAt: Date | string;
@@ -143,7 +150,8 @@ export class ZooService {
         try {
             if (await this.isClosed()) {
                 throw new Error('Zoo is already closed');
-            } else if (await this.getEntriesCount() > await this.getExitsCount()) {
+            }
+            else if (await this.getEntriesCount() > await this.getExitsCount()) {
                 throw new Error('Zoo cannot close, there are still visitors inside');
             }
 
@@ -181,8 +189,8 @@ export class ZooService {
                 opened: (await this.redisClient.get('zooState')) === 'open',
                 openedAt: await this.redisClient.get('openedAt') || 'Not yet opened',
                 closedAt: await this.redisClient.get('closedAt') || 'Not yet closed',
-                entries: await this.getEntries(),
-                exits: await this.getExits(),
+                entries: await this.getEntryByType(EntryType.Entry) || [],
+                exits: await this.getEntryByType(EntryType.Exit) || [],
                 staffRequirements: await this.getStaffRequirements(),
                 canOpen: (await this.canZooOpen()).canOpen,
             };
@@ -193,74 +201,85 @@ export class ZooService {
         }
     }
 
-    public async incrementEntries(ticketId: string, date: Date): Promise<number> {
+    public async addEntryOrExit(ticketId: string, date: Date, type: EntryType): Promise<void> {
         try {
-            const entry = { ticketId, date };
-            const entries = await this.getEntries();
-            entries.push(entry);
-            await this.redisClient.set('entries', JSON.stringify(entries));
-            return entries.length;
+            const key = this.getCurrentKey(type);
+            const entryOrExit = { ticketId, date: date.toISOString() };
+
+            if (!await this.redisClient.json.GET(key)) {
+                await this.redisClient.json.set(key, '$', [entryOrExit]);
+            } else {
+                await this.redisClient.json.arrAppend(key, '$', entryOrExit);
+            }
         } catch (error) {
-            throw new Error('Failed to increment entry count');
+            const errorMessage = `Failed to add ${type} for ticket ${ticketId} at ${date.toISOString()}`;
+            throw new Error(errorMessage);
         }
     }
-
-    public async getEntries(): Promise<Array<{ ticketId: string; date: Date | string }>> {
-        try {
-            const entriesJson = await this.redisClient.get('entries');
-            return entriesJson ? JSON.parse(entriesJson) : [];
-        } catch (error) {
-            throw new Error('Failed to get entry count');
-        }
-    }
-
 
     public async getEntriesCount(): Promise<number> {
         try {
-            const entries = await this.getEntries();
+            const entries = await this.getEntryByType(EntryType.Entry);
             return entries.length;
         } catch (error) {
             throw new Error('Failed to get entry count');
         }
     }
 
-    public async incrementExits(ticketId: string, date: Date): Promise<number> {
+    public async getEntriesAt(date: Date): Promise<any> {
         try {
-            const exit = { ticketId, date };
-            const exits = await this.getExits();
-            exits.push(exit);
-            await this.redisClient.set('exits', JSON.stringify(exits));
-            return exits.length;
-        } catch (error) {
-            throw new Error('Failed to increment exit count');
-        }
-    }
+            const key = this.getKey(date, EntryType.Entry);
+            const data = await this.redisClient.json.get(key);
 
-    public async getExits(): Promise<Array<{ ticketId: string; date: Date | string }>> {
-        try {
-            const exitsJson = await this.redisClient.get('exits');
-            return exitsJson ? JSON.parse(exitsJson) : [];
+            if (!data) {
+                return [];
+            }
+
+            return data;
         } catch (error) {
-            throw new Error('Failed to get exit count');
+            throw new Error('Failed to get entry count');
         }
     }
 
     public async getExitsCount(): Promise<number> {
         try {
-            const exits = await this.getExits();
+            const exits = await this.getEntryByType(EntryType.Exit);
             return exits.length;
         } catch (error) {
             throw new Error('Failed to get exit count');
         }
     }
 
-    public async getCrowdMetrics(): Promise<number> {
+    public async getExitsAt(date: Date): Promise<any> {
         try {
-            const entries = await this.getEntries();
-            const exits = await this.getExits();
-            return entries.length - exits.length;
+            const key = this.getKey(date, EntryType.Exit);
+            const data = await this.redisClient.json.get(key);
+
+            if (!data) {
+                return [];
+            }
+
+            return data;
         } catch (error) {
-            throw new Error('Failed to calculate zoo attendance');
+            throw new Error('Failed to get exit count');
         }
+    }
+
+    public async getEntryByType(type: EntryType): Promise<any> {
+        try {
+            const key = this.getCurrentKey(type);
+            const data = await this.redisClient.json.get(key);
+            return data;
+        } catch (error) {
+            throw new Error('Failed to get entry count');
+        }
+    }
+
+    public getKey(date: Date, type: EntryType): string {
+        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}:${type}@${date.getHours()}`;
+    }
+
+    public getCurrentKey(type: EntryType): string {
+        return this.getKey(new Date(), type);
     }
 }
