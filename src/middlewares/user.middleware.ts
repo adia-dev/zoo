@@ -13,13 +13,14 @@ export function checkUserToken(roles?: string[]): RequestHandler {
     try {
       const authorization = req.headers['authorization'];
       if (authorization === undefined) {
-        res.status(401).end(); // unauthorized
+        res.status(401).json({error: 'Please provide an authorization token'}); // unauthorized
+
         return;
       }
 
       const parts = authorization.split(' ');
       if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        res.status(401).end(); // unauthorized
+        res.status(401).json({ error: 'Invalid authorization token format. Please provide a valid Bearer token' });
         return;
       }
 
